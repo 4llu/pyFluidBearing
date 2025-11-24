@@ -1,0 +1,14 @@
+{% extends "base.html" %} {% block title %}Home - pyFluidBearing{% endblock %}
+{% block content %}
+<header>
+    <h1>Welcome to pyFluidBearing</h1>
+</header>
+
+<p>Hello</p>
+
+<p>
+    <a href="{{ url_for('damping_and_stiffness') }}"
+        >Go to Damping and Stiffness Calculators</a
+    >
+</p>
+{% endblock %}
