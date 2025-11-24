@@ -3,6 +3,7 @@ from callbacks import (
     calculate_friswell_K_and_C,
     calculate_albender_K_and_C,
     plot_albender_results,
+    plot_friswell_results,
     calculate_pressure_distribution,
     calculate_compressible_flow,
 )
@@ -54,6 +55,21 @@ def plot_albender():
         return jsonify({"plot": plot_json})
     except Exception as e:
         print(f"Error in plot_albender: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/plot/friswell", methods=["POST"])
+def plot_friswell():
+    try:
+        data = request.get_json()
+        print(f"Received Friswell plot request with data: {data}")
+        plot_json = plot_friswell_results(data)
+        return jsonify({"plot": plot_json})
+    except Exception as e:
+        print(f"Error in plot_friswell: {e}")
         import traceback
 
         traceback.print_exc()

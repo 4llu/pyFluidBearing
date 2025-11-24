@@ -12,6 +12,145 @@ pyFluidBearing{% endblock %} {% block content %}
 <!-- Friswell K and C Calculator -->
 <section class="bg-white rounded-lg shadow-md p-6 mb-8">
     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Friswell Method</h2>
+
+    <!-- Mode Toggle -->
+    <div class="mb-4 p-3 bg-gray-50 rounded-md">
+        <div class="flex items-center gap-6">
+            <span class="text-sm font-medium text-gray-700">Mode:</span>
+            <label class="inline-flex items-center">
+                <input
+                    type="radio"
+                    name="friswell-mode"
+                    value="single"
+                    checked
+                    class="form-radio text-blue-600"
+                    onchange="window.calculatorApp.toggleFriswellMode('single')"
+                />
+                <span class="ml-2 text-sm text-gray-700">Single Value</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input
+                    type="radio"
+                    name="friswell-mode"
+                    value="range"
+                    class="form-radio text-blue-600"
+                    onchange="window.calculatorApp.toggleFriswellMode('range')"
+                />
+                <span class="ml-2 text-sm text-gray-700">Range Plot</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Range Plot Options (hidden by default) -->
+    <div
+        id="friswell-range-options"
+        class="hidden mb-4 p-4 bg-blue-50 rounded-md border border-blue-200"
+    >
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Sweep Parameter
+                </label>
+                <select
+                    id="friswell-sweep-param"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onchange="window.calculatorApp.updateSweepDefaults()"
+                >
+                    <option
+                        value="omega"
+                        data-min="500"
+                        data-max="5000"
+                        data-unit="RPM"
+                    >
+                        ω (Shaft speed) [RPM]
+                    </option>
+                    <option
+                        value="f"
+                        data-min="100"
+                        data-max="2000"
+                        data-unit="N"
+                    >
+                        f (Static load) [N]
+                    </option>
+                    <option
+                        value="D"
+                        data-min="50"
+                        data-max="200"
+                        data-unit="mm"
+                    >
+                        D (Diameter) [mm]
+                    </option>
+                    <option
+                        value="L"
+                        data-min="10"
+                        data-max="100"
+                        data-unit="mm"
+                    >
+                        L (Length) [mm]
+                    </option>
+                    <option
+                        value="c"
+                        data-min="0.05"
+                        data-max="0.5"
+                        data-unit="mm"
+                    >
+                        c (Radial clearance) [mm]
+                    </option>
+                    <option
+                        value="eta"
+                        data-min="0.01"
+                        data-max="0.5"
+                        data-unit="Pa·s"
+                    >
+                        η (Viscosity) [Pa·s]
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label
+                    id="friswell-sweep-min-label"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                >
+                    Min Value [RPM]
+                </label>
+                <input
+                    type="number"
+                    id="friswell-sweep-min"
+                    step="any"
+                    value="500"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    id="friswell-sweep-max-label"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                >
+                    Max Value [RPM]
+                </label>
+                <input
+                    type="number"
+                    id="friswell-sweep-max"
+                    step="any"
+                    value="5000"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Points
+                </label>
+                <input
+                    type="number"
+                    id="friswell-sweep-points"
+                    step="1"
+                    value="50"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+        </div>
+    </div>
+
     <form id="friswell-form" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -105,12 +244,22 @@ pyFluidBearing{% endblock %} {% block content %}
                 />
             </div>
         </div>
-        <button
-            type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
-        >
-            Calculate K and C
-        </button>
+        <div class="flex gap-3">
+            <button
+                type="submit"
+                id="friswell-calc-btn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
+            >
+                Calculate K and C
+            </button>
+            <button
+                type="button"
+                id="friswell-plot-btn"
+                class="hidden bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md transition"
+            >
+                Generate Plot
+            </button>
+        </div>
     </form>
     <div id="friswell-result" class="hidden mt-6">
         <h3 class="text-xl font-semibold text-gray-800 mb-3">Results:</h3>
@@ -118,6 +267,10 @@ pyFluidBearing{% endblock %} {% block content %}
             id="friswell-result-content"
             class="bg-gray-50 p-4 rounded-md"
         ></div>
+    </div>
+    <div id="friswell-plot-container" class="hidden mt-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Plot:</h3>
+        <svg id="friswell-plot" width="1200" height="700"></svg>
     </div>
 </section>
 
@@ -136,7 +289,7 @@ pyFluidBearing{% endblock %} {% block content %}
                 <input
                     type="text"
                     id="albender-lambda"
-                    placeholder="0.1, 1, 5, 10, 100, 1000"
+                    value="0.1, 1, 5, 10, 100, 1000"
                     required
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

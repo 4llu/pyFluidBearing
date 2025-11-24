@@ -1,6 +1,9 @@
 class CalculatorApp {
     constructor() {
+        this.friswellMode = "single";
         this.initEventListeners();
+        // Store reference globally for inline event handlers
+        window.calculatorApp = this;
     }
 
     initEventListeners() {
@@ -10,6 +13,15 @@ class CalculatorApp {
             friswellForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 this.calculateFriswell();
+            });
+        }
+
+        // Friswell plot button
+        const friswellPlotButton = document.getElementById("friswell-plot-btn");
+        if (friswellPlotButton) {
+            friswellPlotButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                this.plotFriswell();
             });
         }
 
@@ -464,6 +476,356 @@ class CalculatorApp {
             plotButton.disabled = false;
             plotButton.textContent = "Generate Plot";
         }
+    }
+
+    // Friswell Mode Toggle
+    toggleFriswellMode(mode) {
+        this.friswellMode = mode;
+        const rangeOptions = document.getElementById("friswell-range-options");
+        const calcBtn = document.getElementById("friswell-calc-btn");
+        const plotBtn = document.getElementById("friswell-plot-btn");
+        const resultDiv = document.getElementById("friswell-result");
+        const plotContainer = document.getElementById(
+            "friswell-plot-container"
+        );
+
+        if (mode === "range") {
+            rangeOptions.classList.remove("hidden");
+            calcBtn.classList.add("hidden");
+            plotBtn.classList.remove("hidden");
+            resultDiv.classList.add("hidden");
+            // Set default values for the first sweep parameter
+            this.updateSweepDefaults();
+        } else {
+            rangeOptions.classList.add("hidden");
+            calcBtn.classList.remove("hidden");
+            plotBtn.classList.add("hidden");
+            plotContainer.classList.add("hidden");
+        }
+    }
+
+    updateSweepDefaults() {
+        const paramSelect = document.getElementById("friswell-sweep-param");
+        const selectedOption = paramSelect.options[paramSelect.selectedIndex];
+        const minValue = selectedOption.getAttribute("data-min");
+        const maxValue = selectedOption.getAttribute("data-max");
+        const unit = selectedOption.getAttribute("data-unit");
+        const sweepParam = selectedOption.value;
+
+        document.getElementById("friswell-sweep-min").value = minValue;
+        document.getElementById("friswell-sweep-max").value = maxValue;
+        document.getElementById(
+            "friswell-sweep-min-label"
+        ).textContent = `Min Value [${unit}]`;
+        document.getElementById(
+            "friswell-sweep-max-label"
+        ).textContent = `Max Value [${unit}]`;
+
+        // Disable/enable form inputs based on sweep parameter
+        const omegaInput = document.getElementById("friswell-omega");
+        const fInput = document.getElementById("friswell-f");
+        const DInput = document.getElementById("friswell-D");
+        const LInput = document.getElementById("friswell-L");
+        const cInput = document.getElementById("friswell-c");
+        const etaInput = document.getElementById("friswell-eta");
+
+        // Helper function to disable/enable input
+        const setInputState = (input, isDisabled) => {
+            input.disabled = isDisabled;
+            if (isDisabled) {
+                input.classList.add("opacity-50", "cursor-not-allowed");
+            } else {
+                input.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        };
+
+        // Reset all inputs to enabled
+        setInputState(omegaInput, false);
+        setInputState(fInput, false);
+        setInputState(DInput, false);
+        setInputState(LInput, false);
+        setInputState(cInput, false);
+        setInputState(etaInput, false);
+
+        // Disable the parameter being swept
+        switch (sweepParam) {
+            case "omega":
+                setInputState(omegaInput, true);
+                break;
+            case "f":
+                setInputState(fInput, true);
+                break;
+            case "D":
+                setInputState(DInput, true);
+                break;
+            case "L":
+                setInputState(LInput, true);
+                break;
+            case "c":
+                setInputState(cInput, true);
+                break;
+            case "eta":
+                setInputState(etaInput, true);
+                break;
+        }
+    }
+
+    async plotFriswell() {
+        const formData = this.getFriswellPlotData();
+        if (!formData) return;
+
+        try {
+            const plotButton = document.getElementById("friswell-plot-btn");
+            plotButton.disabled = true;
+            plotButton.textContent = "Generating Plot...";
+
+            const response = await fetch("/plot/friswell", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.displayFriswellD3Plot(result.plot);
+            } else {
+                alert("Error generating plot: " + result.error);
+            }
+        } catch (error) {
+            alert("Network error: " + error.message);
+        } finally {
+            const plotButton = document.getElementById("friswell-plot-btn");
+            plotButton.disabled = false;
+            plotButton.textContent = "Generate Plot";
+        }
+    }
+
+    getFriswellPlotData() {
+        const formData = this.getFriswellData();
+        if (!formData) return null;
+
+        const sweepParam = document.getElementById(
+            "friswell-sweep-param"
+        ).value;
+        const sweepMin = parseFloat(
+            document.getElementById("friswell-sweep-min").value
+        );
+        const sweepMax = parseFloat(
+            document.getElementById("friswell-sweep-max").value
+        );
+        const sweepPoints = parseInt(
+            document.getElementById("friswell-sweep-points").value
+        );
+
+        if (isNaN(sweepMin) || isNaN(sweepMax) || isNaN(sweepPoints)) {
+            alert("Please fill in all range parameters with valid numbers");
+            return null;
+        }
+
+        return {
+            ...formData,
+            sweep_param: sweepParam,
+            sweep_min: sweepMin,
+            sweep_max: sweepMax,
+            sweep_points: sweepPoints,
+        };
+    }
+
+    displayFriswellD3Plot(plotData) {
+        const svg = d3.select("#friswell-plot");
+        svg.selectAll("*").remove(); // Clear previous content
+
+        const svgWidth = +svg.attr("width");
+        const svgHeight = +svg.attr("height");
+        const margin = { top: 30, right: 15, bottom: 50, left: 55 };
+        const rowGap = 50; // Space between rows
+        const colGap = 55; // Space between columns for y-axis ticks
+
+        // 2x4 grid: 2 rows (K, C), 4 columns (xx, xy, yx, yy)
+        const plotWidth =
+            (svgWidth - margin.left - margin.right - 3 * colGap) / 4;
+        const plotHeight =
+            (svgHeight - margin.top - margin.bottom - rowGap) / 2;
+
+        const coefficients = [
+            ["K_xx", "K_xy", "K_yx", "K_yy"],
+            ["C_xx", "C_xy", "C_yx", "C_yy"],
+        ];
+
+        const coefficientData = {
+            K_xx: plotData.K_xx,
+            K_xy: plotData.K_xy,
+            K_yx: plotData.K_yx,
+            K_yy: plotData.K_yy,
+            C_xx: plotData.C_xx,
+            C_xy: plotData.C_xy,
+            C_yx: plotData.C_yx,
+            C_yy: plotData.C_yy,
+        };
+
+        const sweepVals = plotData.sweep_vals;
+        const xLabel = plotData.x_label;
+
+        // Calculate y-scales for each coefficient
+        const yScales = {};
+        Object.keys(coefficientData).forEach((coeff) => {
+            const data = coefficientData[coeff];
+            const maxVal = d3.max(data);
+            const minVal = d3.min(data);
+            const padding =
+                (maxVal - minVal) * 0.1 || Math.abs(maxVal) * 0.1 || 1;
+            yScales[coeff] = [minVal - padding, maxVal + padding];
+        });
+
+        // Plot 2 rows x 4 columns
+        coefficients.forEach((row, rowIndex) => {
+            row.forEach((coeff, colIndex) => {
+                const x0 = margin.left + colIndex * (plotWidth + colGap);
+                const y0 = margin.top + rowIndex * (plotHeight + rowGap);
+
+                const g = svg
+                    .append("g")
+                    .attr("transform", `translate(${x0},${y0})`);
+
+                // Create scales
+                const x = d3
+                    .scaleLinear()
+                    .domain(d3.extent(sweepVals))
+                    .range([0, plotWidth]);
+                const y = d3
+                    .scaleLinear()
+                    .domain(yScales[coeff])
+                    .range([plotHeight, 0]);
+
+                // Add grid lines for y-axis
+                const gridY = g
+                    .append("g")
+                    .attr("class", "grid-y")
+                    .call(
+                        d3
+                            .axisLeft(y)
+                            .ticks(5)
+                            .tickSize(-plotWidth)
+                            .tickFormat("")
+                    );
+                gridY
+                    .selectAll("line")
+                    .style("stroke", "#ddd")
+                    .style("opacity", "0.8");
+                gridY.select(".domain").style("display", "none");
+
+                // Add grid lines for x-axis
+                const gridX = g
+                    .append("g")
+                    .attr("class", "grid-x")
+                    .attr("transform", `translate(0,${plotHeight})`)
+                    .call(
+                        d3
+                            .axisBottom(x)
+                            .ticks(4)
+                            .tickSize(-plotHeight)
+                            .tickFormat("")
+                    );
+                gridX
+                    .selectAll("line")
+                    .style("stroke", "#ddd")
+                    .style("opacity", "0.8");
+                gridX.select(".domain").style("display", "none");
+
+                // Add axes
+                const xAxis = g
+                    .append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", `translate(0,${plotHeight})`)
+                    .call(d3.axisBottom(x).ticks(4, "~s"))
+                    .style("font-size", "9px");
+
+                const yAxis = g
+                    .append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).ticks(5, ".2s"))
+                    .style("font-size", "9px");
+
+                // Add x-axis label (only on bottom row)
+                if (rowIndex === 1) {
+                    g.append("text")
+                        .attr("x", plotWidth / 2)
+                        .attr("y", plotHeight + 35)
+                        .attr("text-anchor", "middle")
+                        .attr("fill", "black")
+                        .style("font-size", "11px")
+                        .text(xLabel);
+                }
+
+                // Add subplot title
+                g.append("text")
+                    .attr("x", plotWidth / 2)
+                    .attr("y", -10)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "black")
+                    .style("font-size", "12px")
+                    .style("font-weight", "bold")
+                    .text(coeff);
+
+                // Draw line
+                const lineColor = coeff.startsWith("K") ? "#2563eb" : "#7c3aed";
+                g.append("path")
+                    .datum(
+                        sweepVals.map((d, i) => ({
+                            x: d,
+                            y: coefficientData[coeff][i],
+                        }))
+                    )
+                    .attr("fill", "none")
+                    .attr("stroke", lineColor)
+                    .attr("stroke-width", 2)
+                    .attr(
+                        "d",
+                        d3
+                            .line()
+                            .x((d) => x(d.x))
+                            .y((d) => y(d.y))
+                    );
+            });
+        });
+
+        // Add row labels
+        svg.append("text")
+            .attr("x", 15)
+            .attr("y", margin.top + plotHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr(
+                "transform",
+                `rotate(-90, 15, ${margin.top + plotHeight / 2})`
+            )
+            .attr("fill", "#2563eb")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text("K [N/m]");
+
+        svg.append("text")
+            .attr("x", 15)
+            .attr("y", margin.top + plotHeight + rowGap + plotHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr(
+                "transform",
+                `rotate(-90, 15, ${
+                    margin.top + plotHeight + rowGap + plotHeight / 2
+                })`
+            )
+            .attr("fill", "#7c3aed")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text("C [N·s/m]");
+
+        // Show the plot container
+        const plotContainer = document.getElementById(
+            "friswell-plot-container"
+        );
+        plotContainer.classList.remove("hidden");
     }
 
     displayD3Plot(plotData) {

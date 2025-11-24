@@ -56,6 +56,128 @@ def calculate_friswell_K_and_C(data):
     return {"K": K.tolist(), "C": C.tolist(), "epsilon": epsilon}
 
 
+def plot_friswell_results(data):
+    """
+    Generate plot data for Friswell K and C across a parameter sweep.
+
+    Parameters
+    ----------
+    data : dict
+        Input data containing:
+        - sweep_param: Parameter to sweep ('omega', 'f', 'D', 'L', 'c', or 'eta')
+        - sweep_min: Minimum value for sweep
+        - sweep_max: Maximum value for sweep
+        - sweep_points: Number of points in sweep
+        - omega: Shaft speed in RPM (fixed if not sweep param)
+        - D: Diameter in mm (fixed if not sweep param)
+        - L: Length in mm (fixed if not sweep param)
+        - c: Radial clearance in mm (fixed if not sweep param)
+        - eta: Viscosity in Pa·s (fixed if not sweep param)
+        - f: Static load in N (fixed if not sweep param)
+
+    Returns
+    -------
+    dict
+        Result containing sweep values and K/C coefficients
+    """
+    # Extract parameters
+    sweep_param = data.get("sweep_param", "omega")
+    sweep_min = data.get("sweep_min", 500)
+    sweep_max = data.get("sweep_max", 3000)
+    sweep_points = data.get("sweep_points", 50)
+
+    # Generate sweep values
+    sweep_vals = np.linspace(sweep_min, sweep_max, sweep_points)
+
+    # Initialize result arrays for all 8 coefficients
+    K_xx, K_xy, K_yx, K_yy = [], [], [], []
+    C_xx, C_xy, C_yx, C_yy = [], [], [], []
+
+    for val in sweep_vals:
+        # Set sweep parameter and get fixed parameters with unit conversions
+        if sweep_param == "omega":
+            omega = val * (2 * np.pi) / 60  # RPM to rad/s
+            f = data["f"]  # N
+            D = data["D"] / 1000  # mm to m
+            L = data["L"] / 1000  # mm to m
+            c = data["c"] / 1000  # mm to m
+            eta = data["eta"]  # Pa·s
+        elif sweep_param == "f":
+            omega = data["omega"] * (2 * np.pi) / 60  # RPM to rad/s
+            f = val  # N
+            D = data["D"] / 1000  # mm to m
+            L = data["L"] / 1000  # mm to m
+            c = data["c"] / 1000  # mm to m
+            eta = data["eta"]  # Pa·s
+        elif sweep_param == "D":
+            omega = data["omega"] * (2 * np.pi) / 60  # RPM to rad/s
+            f = data["f"]  # N
+            D = val / 1000  # mm to m
+            L = data["L"] / 1000  # mm to m
+            c = data["c"] / 1000  # mm to m
+            eta = data["eta"]  # Pa·s
+        elif sweep_param == "L":
+            omega = data["omega"] * (2 * np.pi) / 60  # RPM to rad/s
+            f = data["f"]  # N
+            D = data["D"] / 1000  # mm to m
+            L = val / 1000  # mm to m
+            c = data["c"] / 1000  # mm to m
+            eta = data["eta"]  # Pa·s
+        elif sweep_param == "c":
+            omega = data["omega"] * (2 * np.pi) / 60  # RPM to rad/s
+            f = data["f"]  # N
+            D = data["D"] / 1000  # mm to m
+            L = data["L"] / 1000  # mm to m
+            c = val / 1000  # mm to m
+            eta = data["eta"]  # Pa·s
+        elif sweep_param == "eta":
+            omega = data["omega"] * (2 * np.pi) / 60  # RPM to rad/s
+            f = data["f"]  # N
+            D = data["D"] / 1000  # mm to m
+            L = data["L"] / 1000  # mm to m
+            c = data["c"] / 1000  # mm to m
+            eta = val  # Pa·s
+
+        # Compute eccentricity and matrices
+        epsilon = solve_eccentricity(D, omega, eta, L, f, c)
+        K, C = solve_K_and_C_Friswell(omega, f, c, epsilon)
+
+        # Store coefficients
+        K_xx.append(K[0, 0])
+        K_xy.append(K[0, 1])
+        K_yx.append(K[1, 0])
+        K_yy.append(K[1, 1])
+        C_xx.append(C[0, 0])
+        C_xy.append(C[0, 1])
+        C_yx.append(C[1, 0])
+        C_yy.append(C[1, 1])
+
+    # Determine x-axis label based on sweep parameter
+    x_labels = {
+        "omega": "ω [RPM]",
+        "f": "f [N]",
+        "D": "D [mm]",
+        "L": "L [mm]",
+        "c": "c [mm]",
+        "eta": "η [Pa·s]",
+    }
+    x_label = x_labels.get(sweep_param, "Value")
+
+    return {
+        "sweep_vals": sweep_vals.tolist(),
+        "sweep_param": sweep_param,
+        "x_label": x_label,
+        "K_xx": K_xx,
+        "K_xy": K_xy,
+        "K_yx": K_yx,
+        "K_yy": K_yy,
+        "C_xx": C_xx,
+        "C_xy": C_xy,
+        "C_yx": C_yx,
+        "C_yy": C_yy,
+    }
+
+
 def calculate_albender_K_and_C(data):
     """
     Calculate stiffness and damping matrices using Al-Bender method.
