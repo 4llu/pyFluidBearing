@@ -12,21 +12,17 @@ Delta_theta = np.pi/4 # sector angular width [rad]
 
 hL = 50e-6
 hT = 10e-6
-B = (hL - hT) / Delta_theta
 
 # numerical grid
-Nr = 100
+Nr = 40
 Ntheta = 40
 
-# out_figure = "pressure_contours.png"
+out_figure = "pressure_contours.png"
 
-# ------------------------------------------------------------------
-# Helpers and grid
-# ------------------------------------------------------------------
 def h_r_theta(r, theta):
     s = r * theta
-    L = r_out * Delta_theta   # arc length at outer radius (or choose pad arc length)
-    return hL - (hL - hT) * (s / L)
+    L = r_out * Delta_theta
+    return hL + (hT - hL) * (s / L)
 
 r = np.linspace(r_in, r_out, Nr)
 theta = np.linspace(0.0, Delta_theta, Ntheta)
@@ -52,7 +48,7 @@ vals = []
 b = np.zeros(N)
 
 coef_const = 1.0 / (12.0 * mu)
-dh_dtheta = -B  # derivative of h with respect to theta (constant for linear h)
+dh_dtheta = lambda radius: (hT - hL)*radius/(r_out * Delta_theta)
 
 for i in range(Nr):
     ri = r[i]
@@ -116,7 +112,7 @@ for i in range(Nr):
             rows.append(k); cols.append(idx(i+1, j)); vals.append(coef_ip)
 
         # RHS source term from rotation: (omega * r / 2) * dh/dtheta
-        b[k] = (omega * ri / 2.0) * dh_dtheta
+        b[k] = (omega * ri / 2.0) * dh_dtheta(ri)
 
 # finalize sparse matrix and solve
 A = sparse.coo_matrix((vals, (rows, cols)), shape=(N, N)).tocsr()
@@ -136,7 +132,8 @@ for i in range(6):
     TH, RR = np.meshgrid(theta + i*np.pi/3, r)
     X = RR * np.cos(TH)
     Y = RR * np.sin(TH)
-    cf = ax1.contourf(X, Y, P_clip, vmin=np.min(P_clip), vmax=np.max(P_clip), cmap="viridis")
+    cf = ax1.contourf(X, Y, P_clip, vmin=np.min(P_clip), vmax=np.max(P_clip), 
+                      cmap="viridis", levels=50)
 ax1.set_title(f"Pressure dist. when $\omega$ = {np.round(omega,3)} rad/s")
 ax1.set_aspect('equal', 'box')
 plt.colorbar(cf, ax=ax1, orientation='vertical')
@@ -152,8 +149,8 @@ ax2.legend()
 ax2.set_title("Pressure vs theta")
 
 plt.tight_layout()
-# fig.savefig(out_figure, dpi=200)
-# print("Figure saved to:", out_figure)
+fig.savefig(out_figure, dpi=200)
+print("Figure saved to:", out_figure)
 
 # Print simple diagnostics
 print("Peak pressure (after clipping) [Pa]:", np.max(P_clip))
