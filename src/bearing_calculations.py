@@ -264,7 +264,7 @@ def solve_dynamic_K_and_C(Lambda, sigma_array, L_over_D=1.0):
 
     # Stiffness
     K_xx = 0.5 * (Fr_minus + Fr_plus)
-    K_xy = 0.5 * (Ft_minus + Ft_plus)
+    K_yx = 0.5 * (Ft_minus + Ft_plus)
 
     # Damping
     C_xx = -0.5 / sigma_array * (Ft_minus - Ft_plus)
@@ -273,8 +273,8 @@ def solve_dynamic_K_and_C(Lambda, sigma_array, L_over_D=1.0):
     # Build K and C matrices
     K = np.array(
         [
-            [K_xx, K_xy],
-            [-K_xy, K_xx],
+            [K_xx, -K_yx],
+            [K_yx, K_xx],
         ]
     )
     C = np.array(
