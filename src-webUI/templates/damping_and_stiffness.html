@@ -1,103 +1,232 @@
 {% extends "base.html" %} {% block title %}Damping and Stiffness -
 pyFluidBearing{% endblock %} {% block content %}
-<header>
-    <h1>Fluid Bearing Stiffness and Damping Calculator</h1>
-</header>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        Fluid Bearing Stiffness and Damping Calculator
+    </h1>
+    <p class="text-gray-600">
+        Calculate bearing coefficients using Friswell or Al-Bender methods
+    </p>
+</div>
 
 <!-- Friswell K and C Calculator -->
-<section class="calculator-section">
-    <h2>Friswell Method (solve_K_and_C_Friswell)</h2>
-    <form id="friswell-form">
-        <div class="form-group">
-            <label for="friswell-omega">Shaft speed (ω) [RPM]:</label>
-            <input type="number" id="friswell-omega" step="any" required />
+<section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Friswell Method</h2>
+    <form id="friswell-form" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label
+                    for="friswell-omega"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Shaft speed (ω) [RPM]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-omega"
+                    step="any"
+                    value="1500"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="friswell-D"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Diameter (D) [mm]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-D"
+                    step="any"
+                    value="100"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="friswell-L"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Length (L) [mm]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-L"
+                    step="any"
+                    value="30"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="friswell-f"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Static load (f) [N]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-f"
+                    step="any"
+                    value="525"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="friswell-c"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Radial clearance (c) [mm]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-c"
+                    step="any"
+                    value="0.1"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="friswell-eta"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Viscosity (η) [Pa·s]</label
+                >
+                <input
+                    type="number"
+                    id="friswell-eta"
+                    step="any"
+                    value="0.1"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
         </div>
-        <div class="form-group">
-            <label for="friswell-D">Diameter (D) [mm]:</label>
-            <input type="number" id="friswell-D" step="any" required />
-        </div>
-        <div class="form-group">
-            <label for="friswell-L">Length (L) [mm]:</label>
-            <input type="number" id="friswell-L" step="any" required />
-        </div>
-        <div class="form-group">
-            <label for="friswell-f">Static load (f) [N]:</label>
-            <input type="number" id="friswell-f" step="any" required />
-        </div>
-        <div class="form-group">
-            <label for="friswell-c">Radial clearance (c) [mm]:</label>
-            <input type="number" id="friswell-c" step="any" required />
-        </div>
-        <div class="form-group">
-            <label for="friswell-eta">Viscosity (η) [Pa·s]:</label>
-            <input type="number" id="friswell-eta" step="any" required />
-        </div>
-        <button type="submit">Calculate K and C</button>
+        <button
+            type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
+        >
+            Calculate K and C
+        </button>
     </form>
-    <div id="friswell-result" class="result hidden">
-        <h3>Results:</h3>
-        <div id="friswell-result-content"></div>
+    <div id="friswell-result" class="hidden mt-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Results:</h3>
+        <div
+            id="friswell-result-content"
+            class="bg-gray-50 p-4 rounded-md"
+        ></div>
     </div>
 </section>
 
 <!-- Al-Bender K and C Calculator -->
-<section class="calculator-section">
-    <h2>Al-Bender Method (solve_K_and_C_AlBender)</h2>
-    <form id="albender-form">
-        <div class="form-group">
-            <label for="albender-lambda"
-                >Frequency parameter (Λ) [single value or first value]:</label
+<section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Al-Bender Method</h2>
+    <form id="albender-form" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+                <label
+                    for="albender-lambda"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Frequency parameter (Λ) - comma separated for multiple
+                    values (e.g., 0.1, 1, 5, 10, 100, 1000)</label
+                >
+                <input
+                    type="text"
+                    id="albender-lambda"
+                    placeholder="0.1, 1, 5, 10, 100, 1000"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="albender-sigma-min"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Sigma min (log scale)</label
+                >
+                <input
+                    type="number"
+                    id="albender-sigma-min"
+                    step="any"
+                    value="-1"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="albender-sigma-max"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Sigma max (log scale)</label
+                >
+                <input
+                    type="number"
+                    id="albender-sigma-max"
+                    step="any"
+                    value="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="albender-sigma-points"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Number of sigma points</label
+                >
+                <input
+                    type="number"
+                    id="albender-sigma-points"
+                    step="1"
+                    value="10000"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label
+                    for="albender-ld"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >L/D ratio</label
+                >
+                <input
+                    type="number"
+                    id="albender-ld"
+                    step="any"
+                    value="1.0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
-            <input type="number" id="albender-lambda" step="any" required />
-        </div>
-        <div class="form-group">
-            <label for="albender-sigma-min"
-                >Sigma min (log scale) [default -1]:</label
+                Calculate K and C
+            </button>
+            <button
+                type="button"
+                id="albender-plot-btn"
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
-            <input
-                type="number"
-                id="albender-sigma-min"
-                step="any"
-                value="-1"
-            />
+                Generate Plot
+            </button>
         </div>
-        <div class="form-group">
-            <label for="albender-sigma-max"
-                >Sigma max (log scale) [default 3]:</label
-            >
-            <input type="number" id="albender-sigma-max" step="any" value="3" />
-        </div>
-        <div class="form-group">
-            <label for="albender-sigma-points"
-                >Number of sigma points [default 10000]:</label
-            >
-            <input
-                type="number"
-                id="albender-sigma-points"
-                step="1"
-                value="10000"
-            />
-        </div>
-        <div class="form-group">
-            <label for="albender-ld">L/D ratio [default 1.0]:</label>
-            <input type="number" id="albender-ld" step="any" value="1.0" />
-        </div>
-        <button type="submit">Calculate K and C</button>
-        <button type="button" id="albender-plot-btn" style="margin-left: 10px">
-            Generate Plot
-        </button>
     </form>
-    <div id="albender-result" class="result hidden">
-        <h3>Results:</h3>
-        <div id="albender-result-content"></div>
+    <div id="albender-result" class="hidden mt-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Results:</h3>
+        <div
+            id="albender-result-content"
+            class="bg-gray-50 p-4 rounded-md"
+        ></div>
     </div>
-    <div id="albender-plot-container" class="plot-container hidden">
-        <h3>Al-Bender Dynamic Coefficients Plot:</h3>
-        <div id="albender-plot" style="width: 100%; height: 700px"></div>
+    <div id="albender-plot-container" class="hidden">
+        <svg id="albender-plot" width="1000" height="800"></svg>
     </div>
 </section>
 
 {% endblock %} {% block scripts %}
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 {% endblock %}

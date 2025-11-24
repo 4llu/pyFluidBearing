@@ -40,9 +40,16 @@ def calculate(calculator_type):
 def plot_albender():
     try:
         data = request.get_json()
+        print(f"Received plot request with data: {data}")
         plot_json = plot_albender_results(data)
+        print(f"Plot JSON length: {len(plot_json)}")
+        print(plot_json)
         return jsonify({"plot": plot_json})
     except Exception as e:
+        print(f"Error in plot_albender: {e}")
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 400
 
 

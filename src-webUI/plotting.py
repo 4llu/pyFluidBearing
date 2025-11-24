@@ -5,33 +5,43 @@ Plotting functions for bearing calculations using Plotly.
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import numpy as np
+import pandas as pd
+import json
 
 
 def create_albender_plot(sigma_vals, K, C, lambda_val):
     """
-    Create a Plotly figure showing Al-Bender dynamic coefficients.
+    Create a Plotly figure showing Al-Bender dynamic coefficients for a single lambda.
 
     Parameters
     ----------
     sigma_vals : array-like
         Sigma values (x-axis)
     K : numpy.ndarray
-        Stiffness matrix (2x2xN)
+        Stiffness matrix (2x2) where each element is an array
     C : numpy.ndarray
-        Damping matrix (2x2xN)
+        Damping matrix (2x2) where each element is an array
     lambda_val : float
         Lambda value used for calculation
 
     Returns
     -------
     dict
-        Plotly figure as JSON
+        Plotly figure as dict
     """
-    # Extract coefficients
-    K_xx = K[0, 0, :]
-    K_xy = K[0, 1, :]
-    C_xx = C[0, 0, :]
-    C_xy = C[0, 1, :]
+    # Extract coefficients - K and C are (2,2) arrays where each element is an array
+    K_xx = np.array(K[0, 0]).flatten()
+    K_xy = np.array(K[0, 1]).flatten()
+    C_xx = np.array(C[0, 0]).flatten()
+    C_xy = np.array(C[0, 1]).flatten()
+
+    # Ensure sigma_vals is a flat array
+    sigma_vals = np.array(sigma_vals).flatten()
+
+    # Create DataFrame for cleaner data handling
+    df = pd.DataFrame(
+        {"sigma": sigma_vals, "K_xx": K_xx, "K_xy": K_xy, "C_xx": C_xx, "C_xy": C_xy}
+    )
 
     # Create subplots: 2 rows, 2 columns
     fig = make_subplots(
@@ -50,8 +60,8 @@ def create_albender_plot(sigma_vals, K, C, lambda_val):
     # Add K_xx
     fig.add_trace(
         go.Scatter(
-            x=sigma_vals,
-            y=K_xx,
+            x=df["sigma"],
+            y=df["K_xx"],
             mode="lines",
             name=f"K<sub>xx</sub> (Λ={lambda_val})",
             line=dict(width=2),
@@ -63,8 +73,8 @@ def create_albender_plot(sigma_vals, K, C, lambda_val):
     # Add K_xy
     fig.add_trace(
         go.Scatter(
-            x=sigma_vals,
-            y=K_xy,
+            x=df["sigma"],
+            y=df["K_xy"],
             mode="lines",
             name=f"K<sub>xy</sub> (Λ={lambda_val})",
             line=dict(width=2),
@@ -76,8 +86,8 @@ def create_albender_plot(sigma_vals, K, C, lambda_val):
     # Add C_xx
     fig.add_trace(
         go.Scatter(
-            x=sigma_vals,
-            y=C_xx,
+            x=df["sigma"],
+            y=df["C_xx"],
             mode="lines",
             name=f"C<sub>xx</sub> (Λ={lambda_val})",
             line=dict(width=2),
@@ -89,8 +99,8 @@ def create_albender_plot(sigma_vals, K, C, lambda_val):
     # Add C_xy
     fig.add_trace(
         go.Scatter(
-            x=sigma_vals,
-            y=C_xy,
+            x=df["sigma"],
+            y=df["C_xy"],
             mode="lines",
             name=f"C<sub>xy</sub> (Λ={lambda_val})",
             line=dict(width=2),
@@ -119,22 +129,25 @@ def create_albender_plot(sigma_vals, K, C, lambda_val):
         template="plotly_white",
     )
 
-    return fig.to_json()
+    # Return the figure as a dict (not JSON string) so it can be serialized properly
+    # Use json.loads(fig.to_json()) to ensure all numpy arrays are converted to lists
+    # and NaNs/Infs are handled correctly by Plotly's encoder
+    return json.loads(fig.to_json())
 
 
-def create_multiple_lambda_plot(results_list):
+def create_multiple_lambda_plot(results_df):
     """
     Create a Plotly figure showing Al-Bender coefficients for multiple lambda values.
 
     Parameters
     ----------
-    results_list : list of dict
-        List of results, each containing 'sigma_vals', 'K', 'C', 'lambda_val'
+    results_df : pandas.DataFrame
+        DataFrame containing columns: sigma, K_xx, K_xy, C_xx, C_xy, lambda
 
     Returns
     -------
     dict
-        Plotly figure as JSON
+        Plotly figure as dict
     """
     # Create subplots
     fig = make_subplots(
@@ -152,19 +165,21 @@ def create_multiple_lambda_plot(results_list):
 
     colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 
-    for idx, result in enumerate(results_list):
-        sigma_vals = np.array(result["sigma_vals"])
-        K = np.array(result["K"])
-        C = np.array(result["C"])
-        lambda_val = result["lambda_val"]
+    # Get unique lambda values and plot each
+    lambda_values = results_df["lambda"].unique()
+
+    for idx, lambda_val in enumerate(lambda_values):
+        # Filter DataFrame for this lambda value
+        df_lambda = results_df[results_df["lambda"] == lambda_val]
 
         color = colors[idx % len(colors)]
 
-        # Extract coefficients
-        K_xx = K[0, 0, :]
-        K_xy = K[0, 1, :]
-        C_xx = C[0, 0, :]
-        C_xy = C[0, 1, :]
+        # Extract data from DataFrame
+        sigma_vals = df_lambda["sigma"].values
+        K_xx = df_lambda["K_xx"].values
+        K_xy = df_lambda["K_xy"].values
+        C_xx = df_lambda["C_xx"].values
+        C_xy = df_lambda["C_xy"].values
 
         # Add traces
         fig.add_trace(
@@ -249,4 +264,6 @@ def create_multiple_lambda_plot(results_list):
         ),
     )
 
-    return fig.to_json()
+    # Return the figure as a dict (not JSON string) so it can be serialized properly
+    # Use json.loads(fig.to_json()) to ensure all numpy arrays are converted to lists
+    return json.loads(fig.to_json())

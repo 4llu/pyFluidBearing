@@ -4,52 +4,84 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{% block title %}pyFluidBearing{% endblock %}</title>
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='style.css') }}"
-        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
     </head>
-    <body>
-        <nav class="navbar">
-            <div class="nav-container">
-                <a href="{{ url_for('index') }}" class="nav-brand"
-                    >pyFluidBearing</a
-                >
-                <ul class="nav-menu">
-                    <li><a href="{{ url_for('index') }}">Home</a></li>
-                    <li>
-                        <a href="{{ url_for('damping_and_stiffness') }}"
-                            >Damping & Stiffness</a
+    <body class="bg-gray-50 min-h-screen flex flex-col">
+        <!-- Navigation -->
+        <nav class="bg-blue-600 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <a
+                            href="{{ url_for('index') }}"
+                            class="text-white text-xl font-bold hover:text-blue-100 transition"
                         >
-                    </li>
-                </ul>
+                            pyFluidBearing
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a
+                            href="{{ url_for('index') }}"
+                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition"
+                        >
+                            Home
+                        </a>
+                        <a
+                            href="{{ url_for('damping_and_stiffness') }}"
+                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition"
+                        >
+                            Damping & Stiffness
+                        </a>
+                    </div>
+                </div>
             </div>
         </nav>
 
-        <div class="container">{% block content %}{% endblock %}</div>
+        <!-- Main Content -->
+        <main
+            class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8"
+        >
+            {% block content %}{% endblock %}
+        </main>
 
-        <footer class="footer">
-            <div class="footer-container">
-                <div class="footer-section">
-                    <h3>pyFluidBearing</h3>
-                    <p>Fluid Bearing Analysis Tools</p>
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">
+                            pyFluidBearing
+                        </h3>
+                        <p class="text-gray-300">
+                            Fluid Bearing Analysis Tools
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">License</h4>
+                        <p class="text-gray-300">MIT License</p>
+                        <p class="text-gray-300">&copy; 2025 ARotor</p>
+                    </div>
                 </div>
-                <div class="footer-section">
-                    <h4>License</h4>
-                    <p>MIT License</p>
-                    <p>&copy; 2025 ARotor</p>
+                <div
+                    class="mt-6 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm"
+                >
+                    <p>
+                        Licensed under the MIT License. See
+                        <a
+                            href="https://github.com/4llu/pyFluidBearing/blob/main/LICENSE"
+                            target="_blank"
+                            class="text-blue-400 hover:text-blue-300 underline"
+                        >
+                            LICENSE
+                        </a>
+                        for details.
+                    </p>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>
-                    Licensed under the MIT License. See
-                    <a
-                        href="https://github.com/4llu/pyFluidBearing/blob/main/LICENSE"
-                        target="_blank"
-                        >LICENSE</a
-                    >
-                    for details.
-                </p>
             </div>
         </footer>
 

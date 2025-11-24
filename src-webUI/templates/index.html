@@ -1,14 +1,20 @@
 {% extends "base.html" %} {% block title %}Home - pyFluidBearing{% endblock %}
 {% block content %}
-<header>
-    <h1>Welcome to pyFluidBearing</h1>
-</header>
+<div class="text-center py-12">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        Welcome to pyFluidBearing
+    </h1>
+    <p class="text-xl text-gray-600 mb-8">
+        Fluid Bearing Analysis and Calculation Tools
+    </p>
 
-<p>Hello</p>
-
-<p>
-    <a href="{{ url_for('damping_and_stiffness') }}"
-        >Go to Damping and Stiffness Calculators</a
-    >
-</p>
+    <div class="max-w-2xl mx-auto">
+        <a
+            href="{{ url_for('damping_and_stiffness') }}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105"
+        >
+            Go to Damping and Stiffness Calculators →
+        </a>
+    </div>
+</div>
 {% endblock %}

@@ -4,6 +4,7 @@ Handles data conversion and computation logic.
 """
 
 import numpy as np
+import pandas as pd
 from pathlib import Path
 import sys
 
@@ -15,7 +16,7 @@ from src.bearing_calculations import (
     solve_K_and_C_Friswell,
     solve_K_and_C_AlBender,
 )
-from plotting import create_albender_plot
+from plotting import create_albender_plot, create_multiple_lambda_plot
 
 
 def calculate_friswell_K_and_C(data):
@@ -98,20 +99,23 @@ def calculate_albender_K_and_C(data):
 
 def plot_albender_results(data):
     """
-    Generate a Plotly figure for Al-Bender results.
+    Generate raw data for Al-Bender results with multiple lambda values.
 
     Parameters
     ----------
     data : dict
-        Same parameters as calculate_albender_K_and_C
+        Parameters including:
+        - lambda_vals: list of frequency parameters
+        - sigma_min, sigma_max, sigma_points: Sommerfeld number range
+        - L_over_D: Length to diameter ratio
 
     Returns
     -------
     dict
-        Plotly figure as JSON
+        Raw data for plotting
     """
     # Extract parameters with defaults
-    lambda_val = data.get("lambda_vals", [1.0])[0]
+    lambda_vals = data.get("lambda_vals", [1.0])
     sigma_min = data.get("sigma_min", -1)
     sigma_max = data.get("sigma_max", 3)
     sigma_points = data.get("sigma_points", 10000)
@@ -120,14 +124,55 @@ def plot_albender_results(data):
     # Generate sigma values
     sigma_vals = np.logspace(sigma_min, sigma_max, sigma_points)
 
-    # Compute matrices
-    K, C = solve_K_and_C_AlBender(
-        lambda_val,
-        sigma_vals,
-        L_over_D,
-    )
+    # Calculate K and C for all lambda values and store in DataFrames
+    dfs = []
+    for lambda_val in lambda_vals:
+        K, C = solve_K_and_C_AlBender(
+            lambda_val,
+            sigma_vals,
+            L_over_D,
+        )
 
-    # Create plot
-    plot_json = create_albender_plot(sigma_vals, K, C, lambda_val)
+        # Extract coefficients - K and C are (2,2) arrays where each element is an array
+        K_xx = np.array(K[0, 0]).flatten()
+        K_xy = np.array(K[0, 1]).flatten()
+        C_xx = np.array(C[0, 0]).flatten()
+        C_xy = np.array(C[0, 1]).flatten()
 
-    return plot_json
+        # Create DataFrame for this lambda value
+        df = pd.DataFrame(
+            {
+                "sigma": sigma_vals,
+                "K_xx": K_xx,
+                "K_xy": K_xy,
+                "C_xx": C_xx,
+                "C_xy": C_xy,
+                "lambda": lambda_val,
+            }
+        )
+        dfs.append(df)
+
+    # Combine all DataFrames
+    results_df = pd.concat(dfs, ignore_index=True)
+
+    # Return raw data, including all coefficients
+    return {
+        "sigma": results_df["sigma"].tolist(),
+        "K_xx": [
+            results_df[results_df["lambda"] == lambda_val]["K_xx"].tolist()
+            for lambda_val in lambda_vals
+        ],
+        "K_xy": [
+            results_df[results_df["lambda"] == lambda_val]["K_xy"].tolist()
+            for lambda_val in lambda_vals
+        ],
+        "C_xx": [
+            results_df[results_df["lambda"] == lambda_val]["C_xx"].tolist()
+            for lambda_val in lambda_vals
+        ],
+        "C_xy": [
+            results_df[results_df["lambda"] == lambda_val]["C_xy"].tolist()
+            for lambda_val in lambda_vals
+        ],
+        "lambdas": lambda_vals,
+    }
