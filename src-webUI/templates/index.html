@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>pyFluidBearing</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>pyFluidBearing</h1>
+                <p>Fluid Bearing Stiffness and Damping Calculator</p>
+            </header>
+
+            <!-- Friswell K and C Calculator -->
+            <section class="calculator-section">
+                <h2>Friswell Method (solve_K_and_C_Friswell)</h2>
+                <form id="friswell-form">
+                    <div class="form-group">
+                        <label for="friswell-omega">Shaft speed (ω) [RPM]:</label>
+                        <input type="number" id="friswell-omega" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="friswell-D">Diameter (D) [mm]:</label>
+                        <input type="number" id="friswell-D" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="friswell-L">Length (L) [mm]:</label>
+                        <input type="number" id="friswell-L" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="friswell-f">Static load (f) [N]:</label>
+                        <input type="number" id="friswell-f" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="friswell-c">Radial clearance (c) [mm]:</label>
+                        <input type="number" id="friswell-c" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="friswell-eta">Viscosity (η) [Pa·s]:</label>
+                        <input type="number" id="friswell-eta" step="any" required />
+                    </div>
+                    <button type="submit">Calculate K and C</button>
+                </form>
+                <div id="friswell-result" class="result hidden">
+                    <h3>Results:</h3>
+                    <div id="friswell-result-content"></div>
+                </div>
+            </section>
+
+            <!-- Al-Bender K and C Calculator -->
+            <section class="calculator-section">
+                <h2>Al-Bender Method (solve_K_and_C_AlBender)</h2>
+                <form id="albender-form">
+                    <div class="form-group">
+                        <label for="albender-lambda">Frequency parameter (Λ) [single value or first value]:</label>
+                        <input type="number" id="albender-lambda" step="any" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="albender-sigma-min">Sigma min (log scale) [default -1]:</label>
+                        <input type="number" id="albender-sigma-min" step="any" value="-1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="albender-sigma-max">Sigma max (log scale) [default 3]:</label>
+                        <input type="number" id="albender-sigma-max" step="any" value="3" />
+                    </div>
+                    <div class="form-group">
+                        <label for="albender-sigma-points">Number of sigma points [default 10000]:</label>
+                        <input type="number" id="albender-sigma-points" step="1" value="10000" />
+                    </div>
+                    <div class="form-group">
+                        <label for="albender-ld">L/D ratio [default 1.0]:</label>
+                        <input type="number" id="albender-ld" step="any" value="1.0" />
+                    </div>
+                    <button type="submit">Calculate K and C</button>
+                </form>
+                <div id="albender-result" class="result hidden">
+                    <h3>Results:</h3>
+                    <div id="albender-result-content"></div>
+                </div>
+            </section>
+
+        <script src="{{ url_for('static', filename='script.js') }}"></script>
+    </body>
+</html>
