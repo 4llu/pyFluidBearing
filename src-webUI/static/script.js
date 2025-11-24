@@ -19,6 +19,15 @@ class CalculatorApp {
                 e.preventDefault();
                 this.calculateAlBender();
             });
+
+        // Al-Bender plot button
+        const plotButton = document.getElementById("albender-plot-btn");
+        if (plotButton) {
+            plotButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                this.plotAlBender();
+            });
+        }
     }
 
     async calculateFriswell() {
@@ -216,6 +225,54 @@ class CalculatorApp {
         `;
 
         element.parentElement.classList.remove("hidden");
+    }
+
+    async plotAlBender() {
+        const formData = this.getAlBenderData();
+        if (!formData) return;
+
+        try {
+            const plotButton = document.getElementById("albender-plot-btn");
+            plotButton.disabled = true;
+            plotButton.textContent = "Generating Plot...";
+
+            const response = await fetch("/plot/albender", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.displayPlot(result.plot);
+            } else {
+                alert("Error generating plot: " + result.error);
+            }
+        } catch (error) {
+            alert("Network error: " + error.message);
+        } finally {
+            const plotButton = document.getElementById("albender-plot-btn");
+            plotButton.disabled = false;
+            plotButton.textContent = "Generate Plot";
+        }
+    }
+
+    displayPlot(plotJson) {
+        const plotContainer = document.getElementById(
+            "albender-plot-container"
+        );
+        const plotDiv = document.getElementById("albender-plot");
+
+        // Parse and display the Plotly figure
+        const figure = JSON.parse(plotJson);
+        Plotly.newPlot(plotDiv, figure.data, figure.layout, {
+            responsive: true,
+        });
+
+        plotContainer.classList.remove("hidden");
     }
 
     setLoading(formId, isLoading) {
