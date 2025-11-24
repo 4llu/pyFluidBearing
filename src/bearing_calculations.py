@@ -99,7 +99,7 @@ def solve_eccentricity(D, omega, eta, L, f, c):
     return None
 
 
-def solve_K_and_C(omega, f, c, epsilon):
+def solve_K_and_C_Friswell(omega, f, c, epsilon):
     """
     Compute the 2x2 stiffness (K) and damping (C) matrices for a fluid bearing.
 
@@ -226,7 +226,7 @@ def compute_Fbar(Lambda, L_over_D):
     return Fbar
 
 
-def solve_dynamic_K_and_C(Lambda, sigma_array, L_over_D=1.0):
+def solve_K_and_C_AlBender(Lambda, sigma_array, L_over_D=1.0):
     """
     Compute dynamic stiffness and damping matrices K and C using Al-Bender's method for some Λ, σ, and L/D. Be careful with very small values of σ.
 
