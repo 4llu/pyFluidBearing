@@ -1,8 +1,10 @@
-import numpy as np
+import os
+import time
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
-import time
 
 
 def compressible_flow(
@@ -21,6 +23,7 @@ def compressible_flow(
     tol=1e-6,
     relax=0.4,
     plot_title=True,
+    savefig=False,
     out_figure="compressible_flow.png",
 ):
     """
@@ -65,7 +68,7 @@ def compressible_flow(
         file name to save plots
     """
     Nr = 40
-    Ntheta = 40
+    Ntheta = 60
 
     r = np.linspace(r_in, r_out, Nr)
     theta = np.linspace(0.0, Delta_theta, Ntheta)
@@ -256,9 +259,10 @@ def compressible_flow(
         ax2.set_title("Pressure vs theta at different radius")
     ax2.spines[["top", "right"]].set_visible(False)
 
-    plt.tight_layout()
-    fig.savefig(out_figure, dpi=200)
-    print("Figure saved to:", out_figure)
+    if savefig:
+        plt.tight_layout()
+        fig.savefig(os.path.join("reports", out_figure), dpi=200)
+        print(f"Figure saved to: {os.path.join('reports', out_figure)}")
 
     # Print simple diagnostics
     print("Peak pressure (abs) [Pa]:", np.max(P_clip))

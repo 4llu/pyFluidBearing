@@ -16,6 +16,8 @@ from src.bearing_calculations import (
     solve_K_and_C_Friswell,
     solve_K_and_C_AlBender,
 )
+from src.pressure_distribution import pressure_distribution
+from src.compressible_flow import compressible_flow
 from plotting import create_albender_plot, create_multiple_lambda_plot
 
 
@@ -176,3 +178,209 @@ def plot_albender_results(data):
         ],
         "lambdas": lambda_vals,
     }
+
+
+def calculate_pressure_distribution(data):
+    """
+    Calculate pressure distribution for tilted pad thrust bearing.
+
+    Parameters
+    ----------
+    data : dict
+        Input parameters for pressure distribution calculation
+
+    Returns
+    -------
+    dict
+        Result containing image path and statistics
+    """
+    import os
+    import base64
+    from io import BytesIO
+    from src.pressure_distribution import pressure_distribution
+    import matplotlib
+
+    matplotlib.use("Agg")  # Non-interactive backend
+    import matplotlib.pyplot as plt
+
+    # Extract parameters
+    mu = data.get("mu", 0.04)
+    omega = data.get("omega", 2 * np.pi)
+    r_in = data.get("r_in", 0.05)
+    r_out = data.get("r_out", 0.10)
+    n_sector = data.get("n_sector", 6)
+    Delta_theta = data.get("Delta_theta", np.pi / 4)
+    hL = data.get("hL", 50e-6)
+    hT = data.get("hT", 10e-6)
+
+    # Create a temporary file path
+    import tempfile
+
+    temp_dir = tempfile.gettempdir()
+    output_path = os.path.join(temp_dir, "pressure_plot.png")
+
+    # Capture stdout to get statistics
+    import sys
+    from io import StringIO
+
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+
+    try:
+        # Call the pressure distribution function
+        pressure_distribution(
+            mu=mu,
+            omega=omega,
+            r_in=r_in,
+            r_out=r_out,
+            n_sector=n_sector,
+            Delta_theta=Delta_theta,
+            hL=hL,
+            hT=hT,
+            plot_title=True,
+            out_figure=output_path,
+        )
+
+        # Get the captured output
+        output = sys.stdout.getvalue()
+        sys.stdout = old_stdout
+
+        # Read the image and convert to base64
+        with open(output_path, "rb") as img_file:
+            img_data = base64.b64encode(img_file.read()).decode()
+
+        # Extract statistics from output
+        stats = {}
+        for line in output.split("\n"):
+            if "Peak pressure" in line:
+                stats["peak_pressure"] = line.split(":")[1].strip()
+            elif "Mean pressure" in line:
+                stats["mean_pressure"] = line.split(":")[1].strip()
+
+        return {
+            "image": f"data:image/png;base64,{img_data}",
+            "stats": stats,
+        }
+
+    except Exception as e:
+        sys.stdout = old_stdout
+        raise e
+    finally:
+        plt.close("all")
+
+
+def calculate_compressible_flow(data):
+    """
+    Calculate pressure distribution for compressible flow.
+
+    Parameters
+    ----------
+    data : dict
+        Input data containing:
+        - mu: Dynamic viscosity in Pa·s
+        - omega: Angular velocity in rad/s
+        - r_in: Inner radius in m
+        - r_out: Outer radius in m
+        - n_sector: Number of sectors
+        - Delta_theta: Sector angle in rad
+        - hL: Leading edge film thickness in m
+        - hT: Trailing edge film thickness in m
+        - rho_a: Reference density in kg/m³
+        - p_a: Ambient pressure in Pa
+        - beta: Compressibility parameter in Pa
+        - max_iter: Maximum iterations
+        - tol: Convergence tolerance
+        - relax: Relaxation factor
+
+    Returns
+    -------
+    dict
+        Result containing base64 encoded plot image and statistics
+    """
+    import os
+    import base64
+    import matplotlib
+
+    matplotlib.use("Agg")  # Non-interactive backend
+    import matplotlib.pyplot as plt
+
+    # Extract parameters
+    mu = data.get("mu", 0.001)
+    omega = data.get("omega", 157.08)
+    r_in = data.get("r_in", 0.030)
+    r_out = data.get("r_out", 0.050)
+    n_sector = data.get("n_sector", 12)
+    Delta_theta = data.get("Delta_theta", 26 * np.pi / 180)
+    hL = data.get("hL", 50e-6)
+    hT = data.get("hT", 10e-6)
+    rho_a = data.get("rho_a", 1.2)
+    p_a = data.get("p_a", 101325)
+    beta = data.get("beta", 1e6)
+    max_iter = data.get("max_iter", 500)
+    tol = data.get("tol", 1e-6)
+    relax = data.get("relax", 0.4)
+
+    # Create a temporary file path
+    import tempfile
+
+    temp_dir = tempfile.gettempdir()
+    output_path = os.path.join(temp_dir, "compressible_flow_plot.png")
+
+    # Capture stdout to get statistics
+    import sys
+    from io import StringIO
+
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+
+    try:
+        # Call the compressible flow function
+        compressible_flow(
+            mu=mu,
+            omega=omega,
+            r_in=r_in,
+            r_out=r_out,
+            n_sector=n_sector,
+            Delta_theta=Delta_theta,
+            hL=hL,
+            hT=hT,
+            rho_a=rho_a,
+            p_a=p_a,
+            beta=beta,
+            max_iter=max_iter,
+            tol=tol,
+            relax=relax,
+            plot_title=True,
+            out_figure=output_path,
+        )
+
+        # Get the captured output
+        output = sys.stdout.getvalue()
+        sys.stdout = old_stdout
+
+        # Read the image and convert to base64
+        with open(output_path, "rb") as img_file:
+            img_data = base64.b64encode(img_file.read()).decode()
+
+        # Extract statistics from output
+        stats = {}
+        for line in output.split("\n"):
+            if "Peak pressure" in line:
+                stats["peak_pressure"] = line.split(":")[1].strip()
+            elif "Mean pressure" in line:
+                stats["mean_pressure"] = line.split(":")[1].strip()
+            elif "Iterations" in line or "iterations" in line:
+                stats["iterations"] = (
+                    line.split(":")[1].strip() if ":" in line else line.strip()
+                )
+
+        return {
+            "image": f"data:image/png;base64,{img_data}",
+            "stats": stats,
+        }
+
+    except Exception as e:
+        sys.stdout = old_stdout
+        raise e
+    finally:
+        plt.close("all")

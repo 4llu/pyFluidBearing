@@ -5,20 +5,22 @@ class CalculatorApp {
 
     initEventListeners() {
         // Friswell form
-        document
-            .getElementById("friswell-form")
-            .addEventListener("submit", (e) => {
+        const friswellForm = document.getElementById("friswell-form");
+        if (friswellForm) {
+            friswellForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 this.calculateFriswell();
             });
+        }
 
         // Al-Bender form
-        document
-            .getElementById("albender-form")
-            .addEventListener("submit", (e) => {
+        const albenderForm = document.getElementById("albender-form");
+        if (albenderForm) {
+            albenderForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 this.calculateAlBender();
             });
+        }
 
         // Al-Bender plot button
         const plotButton = document.getElementById("albender-plot-btn");
@@ -26,6 +28,24 @@ class CalculatorApp {
             plotButton.addEventListener("click", (e) => {
                 e.preventDefault();
                 this.plotAlBender();
+            });
+        }
+
+        // Pressure distribution form
+        const pressureForm = document.getElementById("pressure-form");
+        if (pressureForm) {
+            pressureForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.calculatePressureDistribution();
+            });
+        }
+
+        // Compressible flow form
+        const compressibleForm = document.getElementById("compressible-form");
+        if (compressibleForm) {
+            compressibleForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.calculateCompressibleFlow();
             });
         }
     }
@@ -684,6 +704,203 @@ class CalculatorApp {
         document
             .getElementById("albender-plot-container")
             .classList.remove("hidden");
+    }
+
+    async calculatePressureDistribution() {
+        const formData = this.getPressureData();
+        if (!formData) return;
+
+        try {
+            this.setPressureLoading(true);
+
+            const response = await fetch("/calculate/pressure_distribution", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.displayPressureResult(result.result);
+            } else {
+                this.displayError("pressure-stats", result.error);
+            }
+        } catch (error) {
+            this.displayError(
+                "pressure-stats",
+                "Network error: " + error.message
+            );
+        } finally {
+            this.setPressureLoading(false);
+        }
+    }
+
+    getPressureData() {
+        const mu = parseFloat(document.getElementById("mu").value);
+        const omega = parseFloat(document.getElementById("omega").value);
+        const r_in = parseFloat(document.getElementById("r_in").value);
+        const r_out = parseFloat(document.getElementById("r_out").value);
+        const n_sector = parseInt(document.getElementById("n_sector").value);
+        const Delta_theta = parseFloat(
+            document.getElementById("Delta_theta").value
+        );
+        const hL = parseFloat(document.getElementById("hL").value) * 1e-6; // Convert μm to m
+        const hT = parseFloat(document.getElementById("hT").value) * 1e-6; // Convert μm to m
+
+        return {
+            mu,
+            omega,
+            r_in,
+            r_out,
+            n_sector,
+            Delta_theta,
+            hL,
+            hT,
+        };
+    }
+
+    displayPressureResult(result) {
+        const resultDiv = document.getElementById("pressure-result");
+        const statsDiv = document.getElementById("pressure-stats");
+        const plotImg = document.getElementById("pressure-plot");
+
+        // Display statistics
+        statsDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">Peak Pressure</h4>
+                    <p class="text-lg font-bold text-blue-700">${
+                        result.stats.peak_pressure || "N/A"
+                    }</p>
+                </div>
+                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">Mean Pressure</h4>
+                    <p class="text-lg font-bold text-green-700">${
+                        result.stats.mean_pressure || "N/A"
+                    }</p>
+                </div>
+            </div>
+        `;
+
+        // Display the plot image
+        plotImg.src = result.image;
+
+        resultDiv.classList.remove("hidden");
+    }
+
+    setPressureLoading(isLoading) {
+        const form = document.getElementById("pressure-form");
+        const button = form.querySelector("button[type='submit']");
+
+        button.disabled = isLoading;
+        button.textContent = isLoading
+            ? "Calculating..."
+            : "Calculate Pressure Distribution";
+    }
+
+    // Compressible Flow Methods
+    async calculateCompressibleFlow() {
+        const formData = this.getCompressibleData();
+        if (!formData) return;
+
+        try {
+            this.setCompressibleLoading(true);
+
+            const response = await fetch("/calculate/compressible_flow", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+                alert(`Error: ${result.error}`);
+            } else {
+                this.displayCompressibleResult(result.result);
+            }
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        } finally {
+            this.setCompressibleLoading(false);
+        }
+    }
+
+    getCompressibleData() {
+        const form = document.getElementById("compressible-form");
+        const formData = new FormData(form);
+
+        return {
+            mu: parseFloat(formData.get("mu")),
+            omega: parseFloat(formData.get("omega")),
+            r_in: parseFloat(formData.get("r_in")),
+            r_out: parseFloat(formData.get("r_out")),
+            n_sector: parseInt(formData.get("n_sector")),
+            Delta_theta:
+                parseFloat(formData.get("Delta_theta")) * (Math.PI / 180), // Convert to radians
+            hL: parseFloat(formData.get("hL")) * 1e-6, // Convert μm to m
+            hT: parseFloat(formData.get("hT")) * 1e-6, // Convert μm to m
+            rho_a: parseFloat(formData.get("rho_a")),
+            p_a: parseFloat(formData.get("p_a")),
+            beta: parseFloat(formData.get("beta")),
+            max_iter: parseInt(formData.get("max_iter")),
+            tol: parseFloat(formData.get("tol")),
+            relax: parseFloat(formData.get("relax")),
+        };
+    }
+
+    displayCompressibleResult(result) {
+        const resultDiv = document.getElementById("compressible-result");
+        const statsDiv = document.getElementById("compressible-stats");
+        const plotImg = document.getElementById("compressible-plot");
+
+        // Display statistics
+        let statsHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">Peak Pressure</h4>
+                    <p class="text-lg font-bold text-blue-700">${
+                        result.stats.peak_pressure || "N/A"
+                    }</p>
+                </div>
+                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">Mean Pressure</h4>
+                    <p class="text-lg font-bold text-green-700">${
+                        result.stats.mean_pressure || "N/A"
+                    }</p>
+                </div>
+        `;
+
+        // Add iterations info if available
+        if (result.stats.iterations) {
+            statsHTML += `
+                <div class="bg-purple-50 border-l-4 border-purple-500 p-3 rounded">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">Convergence</h4>
+                    <p class="text-lg font-bold text-purple-700">${result.stats.iterations}</p>
+                </div>
+            `;
+        }
+
+        statsHTML += `</div>`;
+        statsDiv.innerHTML = statsHTML;
+
+        // Display the plot image
+        plotImg.src = result.image;
+
+        resultDiv.classList.remove("hidden");
+    }
+
+    setCompressibleLoading(isLoading) {
+        const form = document.getElementById("compressible-form");
+        const button = form.querySelector("button[type='submit']");
+
+        button.disabled = isLoading;
+        button.textContent = isLoading
+            ? "Calculating..."
+            : "Calculate Compressible Flow";
     }
 
     setLoading(formId, isLoading) {

@@ -1,5 +1,7 @@
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
 
@@ -14,6 +16,7 @@ def pressure_distribution(
     hL=50e-6,
     hT=10e-6,
     plot_title=True,
+    savefig=False,
     out_figure="pressure_contours.png",
 ):
     """
@@ -47,7 +50,7 @@ def pressure_distribution(
         file name to save plots
     """
     Nr = 40
-    Ntheta = 40
+    Ntheta = 100
 
     r = np.linspace(r_in, r_out, Nr)
     theta = np.linspace(0.0, Delta_theta, Ntheta)
@@ -194,8 +197,9 @@ def pressure_distribution(
     ax2.spines[["top", "right"]].set_visible(False)
 
     plt.tight_layout()
-    fig.savefig(out_figure, dpi=200)
-    print("Figure saved to:", out_figure)
+    if savefig:
+        fig.savefig(os.path.join("reports", out_figure), dpi=200)
+        print(f"Figure saved to: {os.path.join('reports', out_figure)}")
 
     # Print simple diagnostics
     print("Peak pressure (after clipping) [Pa]:", np.max(P_clip))
