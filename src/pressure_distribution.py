@@ -55,7 +55,7 @@ def pressure_distribution(
     dtheta = theta[1] - theta[0]
     L = r_out * Delta_theta
 
-    h_r_theta = lambda r, theta: hL + (hT - hL) * (r * theta / L)
+    h_r_theta = lambda r, theta: hT + (hL - hT) * (r * theta / L)
     idx = lambda i, j: i * Ntheta + j
 
     TH, RR = np.meshgrid(theta, r)
@@ -70,7 +70,7 @@ def pressure_distribution(
     b = np.zeros(N)
 
     coef_const = 1 / (12 * mu)
-    dh_dtheta = lambda radius: (hT - hL) * radius / (r_out * Delta_theta)
+    dh_dtheta = lambda radius: (hL - hT) * radius / (r_out * Delta_theta)
 
     for i in range(Nr):
         ri = r[i]
@@ -159,8 +159,8 @@ def pressure_distribution(
 
     # 2D contour in polar coords mapped to Cartesian
     ax1 = fig.add_subplot(1, 2, 1)
-    for i in range(6):
-        TH, RR = np.meshgrid(theta + i * np.pi / 3, r)
+    for i in range(n_sector):
+        TH, RR = np.meshgrid(theta + i * 2 * np.pi / n_sector, r)
         X = RR * np.cos(TH)
         Y = RR * np.sin(TH)
         cf = ax1.contourf(

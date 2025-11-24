@@ -73,7 +73,7 @@ def compressible_flow(
     dtheta = theta[1] - theta[0]
     L = r_out * Delta_theta
 
-    h_r_theta = lambda r, theta: hL + (hT - hL) * (r * theta / L)
+    h_r_theta = lambda r, theta: hT + (hL - hT) * (r * theta / L)
     idx = lambda i, j: i * Ntheta + j
 
     TH, RR = np.meshgrid(theta, r)
@@ -81,7 +81,7 @@ def compressible_flow(
     H3 = H**3  # Precompute H^3
 
     coef_const = 1 / (12 * mu)
-    dh_dtheta = lambda radius: (hT - hL) * radius / (r_out * Delta_theta)
+    dh_dtheta = lambda radius: (hL - hT) * radius / (r_out * Delta_theta)
     rho_of_p = lambda p: rho_a * np.exp((p - p_a) / beta)
 
     N = Nr * Ntheta
@@ -223,8 +223,8 @@ def compressible_flow(
     # Plot and save results
     fig = plt.figure(figsize=(12, 5))
     ax1 = fig.add_subplot(1, 2, 1)
-    for i in range(6):
-        TH, RR = np.meshgrid(theta + i * np.pi / 3, r)
+    for i in range(n_sector):
+        TH, RR = np.meshgrid(theta + i * 2 * np.pi / n_sector, r)
         X = RR * np.cos(TH)
         Y = RR * np.sin(TH)
         cf = ax1.contourf(
@@ -268,5 +268,5 @@ def compressible_flow(
 
 
 if __name__ == "__main__":
-    compressible_flow(beta=1e6, out_figure="compressible_flow.png")
+    compressible_flow(beta=1e7, out_figure="compressible_flow.png")
     compressible_flow(beta=2e6, out_figure="compressible_flow_2.png")
