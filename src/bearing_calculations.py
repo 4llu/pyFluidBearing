@@ -28,7 +28,7 @@ def NewtonDescent(S_s, init_value=0.5, MAX_ITER=5000, tol=10**-10):
             epsilon -= f(epsilon) / (F(epsilon) + 10**-15)
         iter += 1
         if iter == MAX_ITER:
-            print(f"Max iteration reached, error = {f(epsilon)}")
+            raise Exception(f"Max iteration reached, error = {f(epsilon)}")
     return epsilon
 
 
@@ -84,7 +84,12 @@ def solve_K_and_C(D, omega, eta, L, f, c):
     ##
 
     # Needed for all
-    h_0 = 1 / (np.pi**2 * (1 - epsilon**2) + 16 * epsilon**2) ** (3 / 4)
+    h_0 = np.pi**2 * (1 - epsilon**2)
+    h_0 += 16 * epsilon**2
+    h_0 = h_0 ** (3 / 2)
+    h_0 = 1 / h_0
+
+    print(h_0)
 
     #
     a_uu = h_0 * 4 * (np.pi**2 * (2 - epsilon**2) + 16 * epsilon**2)
@@ -93,7 +98,7 @@ def solve_K_and_C(D, omega, eta, L, f, c):
     a_uv = (
         h_0
         * np.pi
-        * (np.pi**2 * (1 - epsilon**2) - 16 * epsilon**4)
+        * (np.pi**2 * (1 - epsilon**2) ** 2 - 16 * epsilon**4)
         / (epsilon * np.sqrt(1 - epsilon**2))
     )
 
@@ -114,7 +119,7 @@ def solve_K_and_C(D, omega, eta, L, f, c):
         * 4
         * (
             np.pi**2 * (1 + 2 * epsilon**2)
-            + (32 * epsilon**2 * (1 + epsilon**2) / (1 - epsilon**2))
+            + ((32 * epsilon**2 * (1 + epsilon**2)) / (1 - epsilon**2))
         )
     )
 
@@ -136,7 +141,7 @@ def solve_K_and_C(D, omega, eta, L, f, c):
     #
     b_vv = (
         h_0
-        * (2 * np.pi * (np.pi**2 * (1 - epsilon**2) + 48 * epsilon**2))
+        * (2 * np.pi * (np.pi**2 * (1 - epsilon**2) ** 2 + 48 * epsilon**2))
         / (epsilon * np.sqrt(1 - epsilon**2))
     )
 
