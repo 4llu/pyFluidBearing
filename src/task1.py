@@ -1,3 +1,37 @@
+import numpy as np
+
+
+def NewtonDescent(S_s, init_value=0.5, MAX_ITER=5000, tol=10**-10):
+    def f(epsilon):
+        return (
+            epsilon**8
+            - 4 * epsilon**6
+            + (6 - (S_s**2) * (16 - np.pi**2)) * epsilon**4
+            - (4 + (np.pi**2) * (S_s**2)) * epsilon**2
+            + 1
+        )
+
+    def F(epsilon):
+        return (
+            8 * epsilon**7
+            - 24 * epsilon**5
+            + 4 * (6 - (S_s**2) * (16 - np.pi**2)) * epsilon**3
+            - 2 * (4 + (np.pi**2) * (S_s**2)) * epsilon
+        )
+
+    iter = 0
+    epsilon = init_value
+    while abs(f(epsilon)) > tol and iter < MAX_ITER:
+        if F(epsilon) != 0:
+            epsilon -= f(epsilon) / F(epsilon)
+        else:
+            epsilon -= f(epsilon) / (F(epsilon) + 10**-15)
+        iter += 1
+        if iter == MAX_ITER:
+            print(f"Max iteration reached, error = {f(epsilon)}")
+    return epsilon
+
+
 def solve_eccentricity(D, omega, eta, L, f, c):
     """
     Solve for eccentricity (epsilon) based on the provided parameters.
@@ -13,13 +47,21 @@ def solve_eccentricity(D, omega, eta, L, f, c):
     """
     epsilon = None
 
-    # TODO
+    for initial_guess in [0.5, 0.25, 0.75]:
+        S_s = D * omega * eta * L**3 / (8 * f * c**2)
+        epsilon = NewtonDescent(S_s, init_value=initial_guess)
 
-    return epsilon
+        # Check if epsilon is within valid range
+        if epsilon > 0 and epsilon <= 1:
+            return epsilon
+
+    # Newton descent did not converge
+    return None
+
 
 def solve_C_and_K(D, omega, eta, L, f, c):
     """
-    Solve for constants C and K based on the provided parameters.    
+    Solve for constants C and K based on the provided parameters.
     Parameters:
         D (float): A given parameter.
         omega (float): A given parameter.
