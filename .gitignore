@@ -208,3 +208,6 @@ __marimo__/
 
 # Editor directories
 .vscode/
+
+# Mac
+.DS_Store
