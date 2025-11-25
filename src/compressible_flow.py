@@ -248,7 +248,7 @@ def compressible_flow(
         ax1.set_title(rf"Pressure dist. when compressibility $\beta$ = {beta:.1e} Pa")
     ax1.set_aspect("equal", "box"),
     ax1.spines[["left", "bottom", "top", "right"]].set_visible(False)
-    plt.colorbar(cf, ax=ax1, orientation="vertical")
+    # plt.colorbar(cf, ax=ax1, orientation="vertical")
 
     ax2 = fig.add_subplot(1, 2, 2)
     ax2.plot(theta, P_clip[0, :], "--", label=f"r={r_in:.3f} m", color="C1")

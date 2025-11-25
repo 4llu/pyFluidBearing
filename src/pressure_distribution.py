@@ -186,7 +186,7 @@ def pressure_distribution(
     ax1.set_aspect("equal", "box")
     ax1.set(xticks=[], yticks=[])
     ax1.spines[["left", "bottom", "top", "right"]].set_visible(False)
-    plt.colorbar(cf, ax=ax1, orientation="vertical")
+    # plt.colorbar(cf, ax=ax1, orientation="vertical")
 
     # 1D vs radial slices
     ax2 = fig.add_subplot(1, 2, 2)
