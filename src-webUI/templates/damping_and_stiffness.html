@@ -1,42 +1,72 @@
 {% extends "base.html" %} {% block title %}Damping and Stiffness -
 pyFluidBearing{% endblock %} {% block content %}
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        Fluid Bearing Stiffness and Damping Calculator
-    </h1>
-    <p class="text-gray-600">
-        Calculate bearing coefficients using Friswell or Al-Bender methods
-    </p>
+    <div class="flex items-center gap-3 mb-2">
+        <div
+            class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
+        >
+            <svg
+                class="w-5 h-5 text-primary-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+            </svg>
+        </div>
+        <div>
+            <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">
+                Stiffness & Damping Coefficients
+            </h1>
+            <p class="text-slate-500 text-sm">
+                Compute bearing K and C matrices using analytical methods
+            </p>
+        </div>
+    </div>
 </div>
 
 <!-- Friswell K and C Calculator -->
-<section class="bg-white rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Friswell Method</h2>
+<section class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-900">Friswell Method</h2>
+        <span
+            class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded"
+            >Short Journal Bearing</span
+        >
+    </div>
 
     <!-- Mode Toggle -->
-    <div class="mb-4 p-3 bg-gray-50 rounded-md">
+    <div class="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
         <div class="flex items-center gap-6">
-            <span class="text-sm font-medium text-gray-700">Mode:</span>
-            <label class="inline-flex items-center">
+            <span
+                class="text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >Mode:</span
+            >
+            <label class="inline-flex items-center cursor-pointer">
                 <input
                     type="radio"
                     name="friswell-mode"
                     value="single"
                     checked
-                    class="form-radio text-blue-600"
+                    class="form-radio text-primary-600 focus:ring-primary-500"
                     onchange="window.calculatorApp.toggleFriswellMode('single')"
                 />
-                <span class="ml-2 text-sm text-gray-700">Single Value</span>
+                <span class="ml-2 text-sm text-slate-700">Single Value</span>
             </label>
-            <label class="inline-flex items-center">
+            <label class="inline-flex items-center cursor-pointer">
                 <input
                     type="radio"
                     name="friswell-mode"
                     value="range"
-                    class="form-radio text-blue-600"
+                    class="form-radio text-primary-600 focus:ring-primary-500"
                     onchange="window.calculatorApp.toggleFriswellMode('range')"
                 />
-                <span class="ml-2 text-sm text-gray-700">Range Plot</span>
+                <span class="ml-2 text-sm text-slate-700">Range Plot</span>
             </label>
         </div>
     </div>
@@ -44,16 +74,16 @@ pyFluidBearing{% endblock %} {% block content %}
     <!-- Range Plot Options (hidden by default) -->
     <div
         id="friswell-range-options"
-        class="hidden mb-4 p-4 bg-blue-50 rounded-md border border-blue-200"
+        class="hidden mb-4 p-4 bg-primary-50 rounded-lg border border-primary-100"
     >
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-slate-700 mb-1">
                     Sweep Parameter
                 </label>
                 <select
                     id="friswell-sweep-param"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     onchange="window.calculatorApp.updateSweepDefaults()"
                 >
                     <option
@@ -109,7 +139,7 @@ pyFluidBearing{% endblock %} {% block content %}
             <div>
                 <label
                     id="friswell-sweep-min-label"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                 >
                     Min Value [RPM]
                 </label>
@@ -118,13 +148,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="friswell-sweep-min"
                     step="any"
                     value="500"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     id="friswell-sweep-max-label"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                 >
                     Max Value [RPM]
                 </label>
@@ -133,11 +163,11 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="friswell-sweep-max"
                     step="any"
                     value="5000"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-slate-700 mb-1">
                     Points
                 </label>
                 <input
@@ -145,7 +175,7 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="friswell-sweep-points"
                     step="1"
                     value="50"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
         </div>
@@ -156,7 +186,7 @@ pyFluidBearing{% endblock %} {% block content %}
             <div>
                 <label
                     for="friswell-omega"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Shaft speed (ω) [RPM]</label
                 >
                 <input
@@ -165,13 +195,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="1500"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="friswell-D"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Diameter (D) [mm]</label
                 >
                 <input
@@ -180,13 +210,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="100"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="friswell-L"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Length (L) [mm]</label
                 >
                 <input
@@ -195,13 +225,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="30"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="friswell-f"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Static load (f) [N]</label
                 >
                 <input
@@ -210,13 +240,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="525"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="friswell-c"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Radial clearance (c) [mm]</label
                 >
                 <input
@@ -225,13 +255,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="0.1"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="friswell-eta"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Viscosity (η) [Pa·s]</label
                 >
                 <input
@@ -240,7 +270,7 @@ pyFluidBearing{% endblock %} {% block content %}
                     step="any"
                     value="0.1"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
         </div>
@@ -248,41 +278,63 @@ pyFluidBearing{% endblock %} {% block content %}
             <button
                 type="submit"
                 id="friswell-calc-btn"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
+                class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
                 Calculate K and C
             </button>
             <button
                 type="button"
                 id="friswell-plot-btn"
-                class="hidden bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md transition"
+                class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
                 Generate Plot
             </button>
         </div>
     </form>
     <div id="friswell-result" class="hidden mt-6">
-        <h3 class="text-xl font-semibold text-gray-800 mb-3">Results:</h3>
-        <div
-            id="friswell-result-content"
-            class="bg-gray-50 p-4 rounded-md"
-        ></div>
+        <div class="border-t border-slate-200 pt-6">
+            <h3
+                class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3"
+            >
+                Results
+            </h3>
+            <div
+                id="friswell-result-content"
+                class="bg-slate-50 p-4 rounded-lg border border-slate-100 font-mono text-sm"
+            ></div>
+        </div>
     </div>
     <div id="friswell-plot-container" class="hidden mt-6">
-        <h3 class="text-xl font-semibold text-gray-800 mb-3">Plot:</h3>
-        <svg id="friswell-plot" width="1200" height="700"></svg>
+        <div class="border-t border-slate-200 pt-6">
+            <h3
+                class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3"
+            >
+                Parameter Sweep
+            </h3>
+            <div
+                class="bg-slate-50 rounded-lg border border-slate-100 p-4 overflow-x-auto"
+            >
+                <svg id="friswell-plot" width="1200" height="700"></svg>
+            </div>
+        </div>
     </div>
 </section>
 
 <!-- Al-Bender K and C Calculator -->
-<section class="bg-white rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Al-Bender Method</h2>
+<section class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-900">Al-Bender Method</h2>
+        <span
+            class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded"
+            >Dimensionless</span
+        >
+    </div>
     <form id="albender-form" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
                 <label
                     for="albender-lambda"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Frequency parameter (Λ) - comma separated for multiple
                     values (e.g., 0.1, 1, 5, 10, 100, 1000)</label
                 >
@@ -291,13 +343,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="albender-lambda"
                     value="0.1, 1, 5, 10, 100, 1000"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="albender-sigma-min"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Sigma min (log scale)</label
                 >
                 <input
@@ -305,13 +357,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="albender-sigma-min"
                     step="any"
                     value="-1"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="albender-sigma-max"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Sigma max (log scale)</label
                 >
                 <input
@@ -319,13 +371,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="albender-sigma-max"
                     step="any"
                     value="3"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="albender-sigma-points"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >Number of sigma points</label
                 >
                 <input
@@ -333,13 +385,13 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="albender-sigma-points"
                     step="1"
                     value="10000"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
             <div>
                 <label
                     for="albender-ld"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-slate-700 mb-1"
                     >L/D ratio</label
                 >
                 <input
@@ -347,35 +399,52 @@ pyFluidBearing{% endblock %} {% block content %}
                     id="albender-ld"
                     step="any"
                     value="1.0"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
             </div>
         </div>
         <div class="flex gap-3">
             <button
                 type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition"
+                class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
                 Calculate K and C
             </button>
             <button
                 type="button"
                 id="albender-plot-btn"
-                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md transition"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded-md transition"
             >
                 Generate Plot
             </button>
         </div>
     </form>
     <div id="albender-result" class="hidden mt-6">
-        <h3 class="text-xl font-semibold text-gray-800 mb-3">Results:</h3>
-        <div
-            id="albender-result-content"
-            class="bg-gray-50 p-4 rounded-md"
-        ></div>
+        <div class="border-t border-slate-200 pt-6">
+            <h3
+                class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3"
+            >
+                Results
+            </h3>
+            <div
+                id="albender-result-content"
+                class="bg-slate-50 p-4 rounded-lg border border-slate-100 font-mono text-sm"
+            ></div>
+        </div>
     </div>
-    <div id="albender-plot-container" class="hidden">
-        <svg id="albender-plot" width="1000" height="800"></svg>
+    <div id="albender-plot-container" class="hidden mt-6">
+        <div class="border-t border-slate-200 pt-6">
+            <h3
+                class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3"
+            >
+                Coefficient Curves
+            </h3>
+            <div
+                class="bg-slate-50 rounded-lg border border-slate-100 p-4 overflow-x-auto"
+            >
+                <svg id="albender-plot" width="1000" height="800"></svg>
+            </div>
+        </div>
     </div>
 </section>
 
