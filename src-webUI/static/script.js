@@ -1220,6 +1220,7 @@ class CalculatorApp {
             max_iter: parseInt(formData.get("max_iter")),
             tol: parseFloat(formData.get("tol")),
             relax: parseFloat(formData.get("relax")),
+            boundary: form.querySelector('input[name="boundary"]').checked,
         };
     }
 

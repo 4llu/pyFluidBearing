@@ -432,6 +432,7 @@ def calculate_compressible_flow(data):
     max_iter = data.get("max_iter", 500)
     tol = data.get("tol", 1e-6)
     relax = data.get("relax", 0.4)
+    boundary = data.get("boundary", False)
 
     # Create a temporary file path
     import tempfile
@@ -454,6 +455,7 @@ def calculate_compressible_flow(data):
             Delta_theta=Delta_theta,
             hL=hL,
             hT=hT,
+            boundary=boundary,
             rho_a=rho_a,
             p_a=p_a,
             beta=beta,
