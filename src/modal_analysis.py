@@ -1,6 +1,8 @@
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as LA
-import matplotlib.pyplot as plt
 
 
 class Shaft:
@@ -239,7 +241,7 @@ class RotorSystem:
         eigvals = sorted(eigvals, key=np.abs)
         return eigvals, eigvecs
 
-    def campbell(self, speeds):
+    def campbell(self, speeds, out_figure="reports/campbell.png", savefig=False):
         eig_1 = np.zeros_like(speeds)
         eig_2 = np.zeros_like(speeds)
         eig_3 = np.zeros_like(speeds)
@@ -248,7 +250,7 @@ class RotorSystem:
         eig_6 = np.zeros_like(speeds)
 
         for i, speed in enumerate(speeds):
-            eig, _ = rotor.eigenvalues(Omega=speed / 60 * 2 * np.pi)
+            eig, _ = self.eigenvalues(Omega=speed / 60 * 2 * np.pi)
             eig_1[i] = np.abs(eig[0])
             eig_2[i] = np.abs(eig[2])
             eig_3[i] = np.abs(eig[4])
@@ -272,6 +274,11 @@ class RotorSystem:
         ax.set_ylabel("Natural frequency (Hz)", fontsize=11)
         plt.tight_layout()
         plt.subplots_adjust(top=0.83)
+
+        if savefig:
+            fig.savefig(os.path.join("reports", out_figure), dpi=200)
+            print(f"Figure saved to: {os.path.join('reports', out_figure)}")
+
         plt.show()
 
     def print_eigs(self):

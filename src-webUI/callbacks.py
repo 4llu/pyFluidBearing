@@ -25,6 +25,7 @@ from src.bearing_calculations import (
     solve_K_and_C_Friswell,
 )
 from src.compressible_flow import compressible_flow
+from src.modal_analysis import Bearing, RotorSystem
 from src.pressure_distribution import pressure_distribution
 
 
@@ -494,3 +495,113 @@ def calculate_compressible_flow(data):
         raise e
     finally:
         plt.close("all")
+
+
+def calculate_campbell(data):
+    """
+    Calculate Campbell diagram data for rotor system.
+
+    Parameters
+    ----------
+    data : dict
+        Input data containing:
+        - bearing1_kxx: Stiffness in MN/m
+        - bearing1_kyy: Stiffness in MN/m
+        - bearing1_cxx: Damping in kNs/m
+        - bearing1_cyy: Damping in kNs/m
+        - bearing2_kxx: Stiffness in MN/m
+        - bearing2_kyy: Stiffness in MN/m
+        - bearing2_cxx: Damping in kNs/m
+        - bearing2_cyy: Damping in kNs/m
+        - speed_min: Minimum speed in RPM
+        - speed_max: Maximum speed in RPM
+        - speed_points: Number of points
+
+    Returns
+    -------
+    dict
+        Result containing speeds and eigenvalue frequencies for D3 plotting
+    """
+    # Unit conversions: MN/m to N/m, kNs/m to Ns/m
+    bearing1_kxx = data.get("bearing1_kxx", 0.2) * 1e6  # MN/m to N/m
+    bearing1_kyy = data.get("bearing1_kyy", 0.4) * 1e6
+    bearing1_cxx = data.get("bearing1_cxx", 0.0) * 1e3  # kNs/m to Ns/m
+    bearing1_cyy = data.get("bearing1_cyy", 0.0) * 1e3
+    bearing2_kxx = data.get("bearing2_kxx", 0.2) * 1e6
+    bearing2_kyy = data.get("bearing2_kyy", 0.4) * 1e6
+    bearing2_cxx = data.get("bearing2_cxx", 0.0) * 1e3
+    bearing2_cyy = data.get("bearing2_cyy", 0.0) * 1e3
+
+    speed_min = data.get("speed_min", 0)
+    speed_max = data.get("speed_max", 3000)
+    speed_points = data.get("speed_points", 100)
+
+    # Create bearings at fixed nodes 0 and 4 (Friswell example 6.8.1)
+    bearing_1 = Bearing(
+        node=0,
+        kxx=bearing1_kxx,
+        kyy=bearing1_kyy,
+        cxx=bearing1_cxx,
+        cyy=bearing1_cyy,
+    )
+    bearing_2 = Bearing(
+        node=4,
+        kxx=bearing2_kxx,
+        kyy=bearing2_kyy,
+        cxx=bearing2_cxx,
+        cyy=bearing2_cyy,
+    )
+    bearings = [bearing_1, bearing_2]
+
+    # Create rotor system
+    rotor = RotorSystem(bearings=bearings)
+
+    # Generate speed array
+    speeds = np.linspace(speed_min, speed_max, int(speed_points))
+
+    # Calculate eigenvalues at each speed
+    eig_1 = np.zeros_like(speeds)
+    eig_2 = np.zeros_like(speeds)
+    eig_3 = np.zeros_like(speeds)
+    eig_4 = np.zeros_like(speeds)
+    eig_5 = np.zeros_like(speeds)
+    eig_6 = np.zeros_like(speeds)
+
+    for i, speed in enumerate(speeds):
+        eig, _ = rotor.eigenvalues(Omega=speed / 60 * 2 * np.pi)
+        eig_1[i] = np.abs(eig[0]) / (2 * np.pi)  # Convert to Hz
+        eig_2[i] = np.abs(eig[2]) / (2 * np.pi)
+        eig_3[i] = np.abs(eig[4]) / (2 * np.pi)
+        eig_4[i] = np.abs(eig[6]) / (2 * np.pi)
+        eig_5[i] = np.abs(eig[8]) / (2 * np.pi)
+        eig_6[i] = np.abs(eig[10]) / (2 * np.pi)
+
+    # Rotor speed line (1X synchronous)
+    rotor_speed_line = speeds / 60  # RPM to Hz
+
+    # Calculate eigenvalues at key speeds for table display
+    key_speeds = [0, 1000, 3000]
+    eigenvalue_table = []
+    for key_speed in key_speeds:
+        eig_raw, _ = rotor.eigenvalues(Omega=key_speed / 60 * 2 * np.pi)
+        # Get first 8 eigenvalues (4 pairs of complex conjugates)
+        row = {
+            "speed": key_speed,
+            "eigenvalues": [
+                {"real": float(np.real(eig_raw[i])), "imag": float(np.imag(eig_raw[i]))}
+                for i in range(8)
+            ],
+        }
+        eigenvalue_table.append(row)
+
+    return {
+        "speeds": speeds.tolist(),
+        "eig_1": eig_1.tolist(),
+        "eig_2": eig_2.tolist(),
+        "eig_3": eig_3.tolist(),
+        "eig_4": eig_4.tolist(),
+        "eig_5": eig_5.tolist(),
+        "eig_6": eig_6.tolist(),
+        "rotor_speed_line": rotor_speed_line.tolist(),
+        "eigenvalue_table": eigenvalue_table,
+    }

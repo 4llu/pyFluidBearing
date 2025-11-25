@@ -6,6 +6,7 @@ from callbacks import (
     plot_friswell_results,
     calculate_pressure_distribution,
     calculate_compressible_flow,
+    calculate_campbell,
 )
 
 app = Flask(__name__)
@@ -24,6 +25,11 @@ def damping_and_stiffness():
 @app.route("/pressure_fields")
 def pressure_fields():
     return render_template("pressure_fields.html")
+
+
+@app.route("/modal_analysis")
+def modal_analysis():
+    return render_template("modal_analysis.html")
 
 
 @app.route("/calculate/<calculator_type>", methods=["POST"])
@@ -98,6 +104,20 @@ def compressible_flow_route():
         return jsonify({"result": result})
     except Exception as e:
         print(f"Error in compressible_flow: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/campbell", methods=["POST"])
+def campbell_route():
+    try:
+        data = request.get_json()
+        result = calculate_campbell(data)
+        return jsonify({"result": result})
+    except Exception as e:
+        print(f"Error in campbell: {e}")
         import traceback
 
         traceback.print_exc()

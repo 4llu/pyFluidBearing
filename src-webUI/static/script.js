@@ -60,6 +60,15 @@ class CalculatorApp {
                 this.calculateCompressibleFlow();
             });
         }
+
+        // Campbell diagram form
+        const campbellForm = document.getElementById("campbell-form");
+        if (campbellForm) {
+            campbellForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.calculateCampbell();
+            });
+        }
     }
 
     async calculateFriswell() {
@@ -1277,6 +1286,341 @@ class CalculatorApp {
                 button.textContent = "Calculate K and C";
             }
         });
+    }
+
+    // Campbell Diagram Methods
+    async calculateCampbell() {
+        const formData = this.getCampbellData();
+        if (!formData) return;
+
+        try {
+            this.setCampbellLoading(true);
+
+            const response = await fetch("/api/campbell", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.displayCampbellD3Plot(result.result);
+            } else {
+                alert("Error calculating Campbell diagram: " + result.error);
+            }
+        } catch (error) {
+            alert("Network error: " + error.message);
+        } finally {
+            this.setCampbellLoading(false);
+        }
+    }
+
+    getCampbellData() {
+        return {
+            bearing1_kxx: parseFloat(
+                document.getElementById("bearing1_kxx").value
+            ),
+            bearing1_kyy: parseFloat(
+                document.getElementById("bearing1_kyy").value
+            ),
+            bearing1_cxx: parseFloat(
+                document.getElementById("bearing1_cxx").value
+            ),
+            bearing1_cyy: parseFloat(
+                document.getElementById("bearing1_cyy").value
+            ),
+            bearing2_kxx: parseFloat(
+                document.getElementById("bearing2_kxx").value
+            ),
+            bearing2_kyy: parseFloat(
+                document.getElementById("bearing2_kyy").value
+            ),
+            bearing2_cxx: parseFloat(
+                document.getElementById("bearing2_cxx").value
+            ),
+            bearing2_cyy: parseFloat(
+                document.getElementById("bearing2_cyy").value
+            ),
+            speed_min: parseFloat(document.getElementById("speed_min").value),
+            speed_max: parseFloat(document.getElementById("speed_max").value),
+            speed_points: parseInt(
+                document.getElementById("speed_points").value
+            ),
+        };
+    }
+
+    setCampbellLoading(isLoading) {
+        const button = document.getElementById("campbell-btn");
+        if (button) {
+            button.disabled = isLoading;
+            button.textContent = isLoading
+                ? "Calculating..."
+                : "Generate Campbell Diagram";
+        }
+    }
+
+    displayCampbellD3Plot(plotData) {
+        const svg = d3.select("#campbell-plot");
+        svg.selectAll("*").remove();
+
+        const svgWidth = +svg.attr("width");
+        const svgHeight = +svg.attr("height");
+        const margin = { top: 60, right: 150, bottom: 60, left: 70 };
+        const plotWidth = svgWidth - margin.left - margin.right;
+        const plotHeight = svgHeight - margin.top - margin.bottom;
+
+        const speeds = plotData.speeds;
+        const eigenvalues = [
+            { name: "First", data: plotData.eig_1, color: "#e41a1c" },
+            { name: "Second", data: plotData.eig_2, color: "#377eb8" },
+            { name: "Third", data: plotData.eig_3, color: "#4daf4a" },
+            { name: "Fourth", data: plotData.eig_4, color: "#984ea3" },
+            { name: "Fifth", data: plotData.eig_5, color: "#ff7f00" },
+            { name: "Sixth", data: plotData.eig_6, color: "#a65628" },
+        ];
+        const rotorSpeedLine = plotData.rotor_speed_line;
+
+        // Calculate scales
+        const xExtent = d3.extent(speeds);
+        const allFreqs = eigenvalues
+            .flatMap((e) => e.data)
+            .concat(rotorSpeedLine);
+        const yMax = d3.max(allFreqs) * 1.1;
+
+        const x = d3.scaleLinear().domain(xExtent).range([0, plotWidth]);
+
+        const y = d3.scaleLinear().domain([0, yMax]).range([plotHeight, 0]);
+
+        // Create main group
+        const g = svg
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Add grid lines
+        g.append("g")
+            .attr("class", "grid-y")
+            .call(d3.axisLeft(y).ticks(10).tickSize(-plotWidth).tickFormat(""))
+            .selectAll("line")
+            .style("stroke", "#e0e0e0")
+            .style("stroke-dasharray", "2,2");
+
+        g.append("g")
+            .attr("class", "grid-x")
+            .attr("transform", `translate(0,${plotHeight})`)
+            .call(
+                d3.axisBottom(x).ticks(10).tickSize(-plotHeight).tickFormat("")
+            )
+            .selectAll("line")
+            .style("stroke", "#e0e0e0")
+            .style("stroke-dasharray", "2,2");
+
+        // Remove grid domain lines
+        g.selectAll(".grid-x .domain, .grid-y .domain").style(
+            "display",
+            "none"
+        );
+
+        // Add axes
+        g.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${plotHeight})`)
+            .call(d3.axisBottom(x).ticks(10))
+            .style("font-size", "11px");
+
+        g.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y).ticks(10))
+            .style("font-size", "11px");
+
+        // Add axis labels
+        g.append("text")
+            .attr("x", plotWidth / 2)
+            .attr("y", plotHeight + 45)
+            .attr("text-anchor", "middle")
+            .style("font-size", "13px")
+            .style("font-weight", "500")
+            .text("Speed (RPM)");
+
+        g.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -plotHeight / 2)
+            .attr("y", -50)
+            .attr("text-anchor", "middle")
+            .style("font-size", "13px")
+            .style("font-weight", "500")
+            .text("Natural Frequency (Hz)");
+
+        // Add title
+        svg.append("text")
+            .attr("x", svgWidth / 2)
+            .attr("y", 30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .style("font-weight", "600")
+            .text("Campbell Diagram");
+
+        // Line generator
+        const line = d3
+            .line()
+            .x((d, i) => x(speeds[i]))
+            .y((d) => y(d));
+
+        // Draw rotor speed line (dashed)
+        g.append("path")
+            .datum(rotorSpeedLine)
+            .attr("fill", "none")
+            .attr("stroke", "#2563eb")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "6,4")
+            .attr("d", line);
+
+        // Draw eigenvalue lines
+        eigenvalues.forEach((eig) => {
+            g.append("path")
+                .datum(eig.data)
+                .attr("fill", "none")
+                .attr("stroke", eig.color)
+                .attr("stroke-width", 2)
+                .attr("d", line);
+        });
+
+        // Add legend
+        const legend = svg
+            .append("g")
+            .attr(
+                "transform",
+                `translate(${svgWidth - margin.right + 20}, ${margin.top})`
+            );
+
+        // Rotor speed legend entry
+        legend
+            .append("line")
+            .attr("x1", 0)
+            .attr("x2", 25)
+            .attr("y1", 0)
+            .attr("y2", 0)
+            .attr("stroke", "#2563eb")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "6,4");
+
+        legend
+            .append("text")
+            .attr("x", 30)
+            .attr("y", 4)
+            .style("font-size", "11px")
+            .text("Rotor Speed");
+
+        // Eigenvalue legend entries
+        eigenvalues.forEach((eig, i) => {
+            const yOffset = (i + 1) * 22;
+
+            legend
+                .append("line")
+                .attr("x1", 0)
+                .attr("x2", 25)
+                .attr("y1", yOffset)
+                .attr("y2", yOffset)
+                .attr("stroke", eig.color)
+                .attr("stroke-width", 2);
+
+            legend
+                .append("text")
+                .attr("x", 30)
+                .attr("y", yOffset + 4)
+                .style("font-size", "11px")
+                .text(eig.name);
+        });
+
+        // Show the plot container
+        const plotContainer = document.getElementById(
+            "campbell-plot-container"
+        );
+        plotContainer.classList.remove("hidden");
+
+        // Display eigenvalue table
+        this.displayEigenvalueTable(plotData.eigenvalue_table);
+    }
+
+    displayEigenvalueTable(tableData) {
+        const container = document.getElementById("eigenvalue-tables");
+        if (!container || !tableData) return;
+
+        container.innerHTML = "";
+
+        tableData.forEach((row) => {
+            const tableWrapper = document.createElement("div");
+            tableWrapper.className = "overflow-x-auto";
+
+            const speedLabel = document.createElement("h3");
+            speedLabel.className = "text-md font-medium text-slate-700 mb-2";
+            speedLabel.innerHTML = `Ω = <span class="text-violet-600 font-semibold">${row.speed}</span> RPM`;
+            tableWrapper.appendChild(speedLabel);
+
+            const table = document.createElement("table");
+            table.className =
+                "min-w-full divide-y divide-slate-200 border border-slate-200 rounded-lg overflow-hidden";
+
+            // Table header
+            const thead = document.createElement("thead");
+            thead.className = "bg-slate-50";
+            thead.innerHTML = `
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Mode</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Real Part (σ)</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Imag Part (ω)</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Frequency (Hz)</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Damping Ratio</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            // Table body
+            const tbody = document.createElement("tbody");
+            tbody.className = "bg-white divide-y divide-slate-100";
+
+            row.eigenvalues.forEach((eig, idx) => {
+                const magnitude = Math.sqrt(
+                    eig.real * eig.real + eig.imag * eig.imag
+                );
+                const freqHz = Math.abs(eig.imag) / (2 * Math.PI);
+                // Damping ratio: -σ / |λ| (positive means stable)
+                const dampingRatio = magnitude > 0 ? -eig.real / magnitude : 0;
+
+                const tr = document.createElement("tr");
+                tr.className = idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-sm font-medium text-slate-700">${
+                        idx + 1
+                    }</td>
+                    <td class="px-4 py-2 text-sm text-right font-mono ${
+                        eig.real >= 0 ? "text-red-600" : "text-slate-600"
+                    }">${eig.real.toFixed(2)}</td>
+                    <td class="px-4 py-2 text-sm text-right font-mono text-slate-600">${eig.imag.toFixed(
+                        2
+                    )}</td>
+                    <td class="px-4 py-2 text-sm text-right font-mono text-violet-600 font-medium">${freqHz.toFixed(
+                        2
+                    )}</td>
+                    <td class="px-4 py-2 text-sm text-right font-mono ${
+                        dampingRatio < 0 ? "text-red-600" : "text-emerald-600"
+                    }">${(dampingRatio * 100).toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            tableWrapper.appendChild(table);
+            container.appendChild(tableWrapper);
+        });
+
+        // Show the table container
+        const tableContainer = document.getElementById(
+            "eigenvalue-table-container"
+        );
+        tableContainer.classList.remove("hidden");
     }
 }
 
