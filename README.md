@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/static/js/logo.png" alt="logo" width="60%">
+  <img src="docs/static/logo.png" alt="logo" width="60%">
 </p>
 
 # pyFluidBearing
