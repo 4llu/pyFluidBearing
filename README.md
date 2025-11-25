@@ -10,7 +10,7 @@ The objectives of this library are as follows:
 
 1. Provide easy and reproducible tools for evaluating fluid film bearing performance, including load capacity, stiffness, damping, and pressure distribution
 
-2. Enable comparison of analytical, numerical, and data-driven approaches for modeling and analyzing bearing behavio
+2. Enable comparison of analytical, numerical, and data-driven approaches for modeling and analyzing bearing behavior.
 
 
 Authors: _Aleksanteri Hämäläinen, Oliver Häggman, Elmo Laine, Huy Nguyen_
@@ -36,7 +36,7 @@ Notebook 1: examples.ipynb — reproducing results from:
 
 ## Documentation
 
-See [pyFluidBearing documentation](https://) for documentation.
+See [pyFluidBearing documentation](https://4llu.github.io/pyFluidBearing/).
 
 
 
