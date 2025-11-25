@@ -21,7 +21,7 @@ def compressible_flow(
     p_a=101325,
     beta=1e6,  # 2e6
     max_iter=80,
-    tol=1e-6,
+    tol=1e-7,
     relax=0.4,
     plot_title=True,
     savefig=False,
