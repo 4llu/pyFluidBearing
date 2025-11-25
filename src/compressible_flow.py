@@ -16,6 +16,7 @@ def compressible_flow(
     Delta_theta=np.pi / 4,
     hL=50e-6,
     hT=10e-6,
+    boundary=False,
     rho_a=1.2,
     p_a=101325,
     beta=1e6,  # 2e6
@@ -50,6 +51,8 @@ def compressible_flow(
         leading edge gap height [m]
     hT : float
         trailing edge gap height [m]
+    boundary : bool
+        include Dirichlet boundary condition or not
     rho_a : float
         reference density [kg/m^3]
     p_a : float
@@ -79,7 +82,11 @@ def compressible_flow(
     h_r_theta = lambda r, theta: hT + (hL - hT) * (r * theta / L)
     idx = lambda i, j: i * Ntheta + j
 
-    TH, RR = np.meshgrid(theta, r)
+    TH, RR = np.zeros(Ntheta+2), np.zeros(Nr+2)
+    TH[1:-1], RR[1:-1] = theta, r
+    TH[0], TH[-1], = -dtheta, Delta_theta+dtheta
+    RR[0], RR[-1] = r_in-dr, r_out+dr
+    TH, RR = np.meshgrid(TH, RR)
     H = h_r_theta(RR, TH)
     H3 = H**3  # Precompute H^3
 
@@ -100,53 +107,49 @@ def compressible_flow(
         b = np.zeros(N)
         rho_all = rho_of_p(p_vec)
 
-        for i in range(Nr):
-            ri = r[i]
-            for j in range(Ntheta):
-                k = idx(i, j)
+        for i in range(1, Nr+1):
+            ri = r[i-1]
+            for j in range(1, Ntheta+1):
+                k = idx(i-1, j-1)
+                
+                if boundary:
+                    if j == 1 or j == Ntheta:
+                        rows.append(k)
+                        cols.append(k)
+                        vals.append(1.0)
+                        b[k] = 0.0
+                        continue
+                    
+                    if i == 1 or i == Nr:
+                        rows.append(k)
+                        cols.append(k)
+                        vals.append(1.0)
+                        b[k] = 0.0
+                        continue
 
-                # Theta boundaries: Dirichlet p=0
-                if j == 0 or j == Ntheta - 1:
-                    rows.append(k)
-                    cols.append(k)
-                    vals.append(1.0)
-                    b[k] = 0.0
-                    continue
-
-                # Theta-term coefficients (use rho * H^3)
-                Hm_rho = rho_all[idx(i, j - 1)] * H3[i, j - 1]
-                Hp_rho = rho_all[idx(i, j + 1)] * H3[i, j + 1]
-
-                A_m = coef_const * Hm_rho / ri
-                A_p = coef_const * Hp_rho / ri
-
+                # Theta-term coefficients
+                Hm = H3[i, j - 1]
+                Hp = H3[i, j + 1]
+                A_m = coef_const * Hm / ri
+                A_p = coef_const * Hp / ri
                 theta_m_coef = -A_m / (dtheta * dtheta)
                 theta_p_coef = -A_p / (dtheta * dtheta)
                 theta_c_coef = -(theta_m_coef + theta_p_coef)
 
-                # Radial-term coefficients: d/dr( (rho*H^3/(12 mu)) * r * dp/dr )
-                if 0 < i < Nr - 1:
-                    H_im_rho = rho_all[idx(i - 1, j)] * H3[i - 1, j]
-                    H_ip_rho = rho_all[idx(i + 1, j)] * H3[i + 1, j]
-                    B_im = coef_const * H_im_rho * r[i - 1]
-                    B_ip = coef_const * H_ip_rho * r[i + 1]
-                    rad_m_coef = -B_im / (dr * dr)
-                    rad_p_coef = -B_ip / (dr * dr)
-                    rad_c_coef = -(rad_m_coef + rad_p_coef)
+                # Radial-term coefficients
+                H_im = H3[i - 1, j]
+                H_ip = H3[i + 1, j]
+                if i>=2: 
+                    B_im = coef_const * H_im * r[i-2]
                 else:
-                    # Neumann dp/dr = 0 approximated with ghost point
-                    if i == 0:
-                        H_ip_rho = rho_all[idx(i + 1, j)] * H3[i + 1, j]
-                        B_ip = coef_const * H_ip_rho * r[i + 1]
-                        rad_m_coef = 0.0
-                        rad_p_coef = -B_ip / (dr * dr)
-                        rad_c_coef = -rad_p_coef
-                    else:  # i == Nr-1
-                        H_im_rho = rho_all[idx(i - 1, j)] * H3[i - 1, j]
-                        B_im = coef_const * H_im_rho * r[i - 1]
-                        rad_p_coef = 0.0
-                        rad_m_coef = -B_im / (dr * dr)
-                        rad_c_coef = -rad_m_coef
+                    B_im = 0
+                if i <= Nr-1:
+                    B_ip = coef_const * H_ip * r[i]
+                else:
+                    B_ip = 0
+                rad_m_coef = -B_im / (dr * dr)
+                rad_p_coef = -B_ip / (dr * dr)
+                rad_c_coef = -(rad_m_coef + rad_p_coef)
 
                 center = theta_c_coef + rad_c_coef
                 coef_jm = theta_m_coef
@@ -158,28 +161,29 @@ def compressible_flow(
                 rows.append(k)
                 cols.append(k)
                 vals.append(center)
-                rows.append(k)
-                cols.append(idx(i, j - 1))
-                vals.append(coef_jm)
-                rows.append(k)
-                cols.append(idx(i, j + 1))
-                vals.append(coef_jp)
-                if i - 1 >= 0:
+                if j > 1:
                     rows.append(k)
-                    cols.append(idx(i - 1, j))
+                    cols.append(idx(i-1, j-2)) #(i,j-1)
+                    vals.append(coef_jm)
+                if j < Ntheta:
+                    rows.append(k)
+                    cols.append(idx(i-1, j)) #(i,j+1)
+                    vals.append(coef_jp)
+                if i > 1:
+                    rows.append(k)
+                    cols.append(idx(i-2, j-1)) #(i-1,j)
                     vals.append(coef_im)
-                if i + 1 < Nr:
+                if i < Nr:
                     rows.append(k)
-                    cols.append(idx(i + 1, j))
+                    cols.append(idx(i, j-1)) #(i+1,j)
                     vals.append(coef_ip)
 
                 # RHS source term: (omega * r / 2) * d/dtheta( rho * h )
                 # d( rho * h )/dtheta = rho * dh/dtheta + h * d rho/dtheta
-                # approximate d rho / dtheta with central difference
+                # approximate d rho / dtheta
                 rho_c = rho_all[k]
-                rho_m = rho_all[idx(i, j - 1)]
-                rho_p = rho_all[idx(i, j + 1)]
-                drho_dtheta = (rho_p - rho_m) / (2.0 * dtheta)
+                rho_m = rho_all[idx(i-1, j-2)] #(i, j-1)
+                drho_dtheta = (rho_c - rho_m) / dtheta
 
                 dhdt = dh_dtheta(ri)
 
@@ -259,8 +263,8 @@ def compressible_flow(
         ax2.set_title("Pressure vs theta at different radius")
     ax2.spines[["top", "right"]].set_visible(False)
 
+    plt.tight_layout()
     if savefig:
-        plt.tight_layout()
         fig.savefig(os.path.join("reports", out_figure), dpi=200)
         print(f"Figure saved to: {os.path.join('reports', out_figure)}")
 
@@ -272,5 +276,7 @@ def compressible_flow(
 
 
 if __name__ == "__main__":
-    compressible_flow(beta=1e7, out_figure="compressible_flow.png")
-    compressible_flow(beta=2e6, out_figure="compressible_flow_2.png")
+    compressible_flow(beta=1e7, out_figure="compressible_flow.png", savefig=True)
+    compressible_flow(beta=4e6, out_figure="compressible_flow_2.png", savefig=True)
+    compressible_flow(beta=1e7, boundary=True, out_figure="compressible_flow_w_boundary.png", savefig=True)
+    compressible_flow(beta=4e6, boundary=True, out_figure="compressible_flow_2_w_boundary.png", savefig=True)
