@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; pyFluidBearing 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="PyFluidBearing: Open-Source Software for Fluid Bearing Calculations" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pyFluidBearing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bearing_calculations.NewtonDescent"><code class="docutils literal notranslate"><span class="pre">NewtonDescent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bearing_calculations.compute_Fbar"><code class="docutils literal notranslate"><span class="pre">compute_Fbar()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bearing_calculations.solve_K_and_C_AlBender"><code class="docutils literal notranslate"><span class="pre">solve_K_and_C_AlBender()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bearing_calculations.solve_K_and_C_Friswell"><code class="docutils literal notranslate"><span class="pre">solve_K_and_C_Friswell()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bearing_calculations.solve_eccentricity"><code class="docutils literal notranslate"><span class="pre">solve_eccentricity()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyFluidBearing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-bearing_calculations">
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-bearing_calculations" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="bearing_calculations.NewtonDescent">
+<span class="sig-prename descclassname"><span class="pre">bearing_calculations.</span></span><span class="sig-name descname"><span class="pre">NewtonDescent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MAX_ITER</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bearing_calculations.NewtonDescent" title="Link to this definition"></a></dt>
+<dd><p>Find a root of the Friswell polynomial using Newton’s method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>S_s</strong> (<em>float</em>) – Dimensionless parameter S_s = D * omega * eta * L**3 / (8 * f * c**2).</p></li>
+<li><p><strong>init_value</strong> (<em>float</em><em>, </em><em>optional</em>) – Initial guess for epsilon (default 0.5).</p></li>
+<li><p><strong>MAX_ITER</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum allowed Newton iterations (default 5000).</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Absolute tolerance on the polynomial residual <a href="#id1"><span class="problematic" id="id2">|f(epsilon)|</span></a> used as
+the convergence criterion (default 1e-10).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Approximated root epsilon (dimensionless eccentricity).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the maximum number of iterations is reached without convergence.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bearing_calculations.compute_Fbar">
+<span class="sig-prename descclassname"><span class="pre">bearing_calculations.</span></span><span class="sig-name descname"><span class="pre">compute_Fbar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L_over_D</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bearing_calculations.compute_Fbar" title="Link to this definition"></a></dt>
+<dd><p>Compute the complex function Fbar(Λ; L/D) = Fr + i·Ft used in Al-Bender formulations (chapter 9.3).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Lambda</strong> (<em>scalar</em><em> or </em><em>array-like</em>) – Non-negative real or complex-valued frequency parameter Λ. Can be a scalar or array and will be
+converted to a complex numpy array for vectorized evaluation.</p></li>
+<li><p><strong>L_over_D</strong> (<em>float</em>) – The ratio L/D.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Complex-valued array (Fr + 1j*Ft) evaluated elementwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray (complex128)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bearing_calculations.solve_K_and_C_AlBender">
+<span class="sig-prename descclassname"><span class="pre">bearing_calculations.</span></span><span class="sig-name descname"><span class="pre">solve_K_and_C_AlBender</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Lambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L_over_D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bearing_calculations.solve_K_and_C_AlBender" title="Link to this definition"></a></dt>
+<dd><p>Compute dynamic stiffness and damping matrices K and C using Al-Bender’s method for some Λ, σ, and L/D. Be careful with very small values of σ.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Lambda</strong> (<em>scalar</em><em> or </em><em>array-like</em>) – Frequency parameter Λ. May be a scalar or an array; it will be broadcast
+against sigma_array.</p></li>
+<li><p><strong>sigma_array</strong> (<em>array-like</em>) – Array of positive real offsets (σ). Must be non-zero (avoid values
+near zero). Must be broadcastable to the shape of Lambda.</p></li>
+<li><p><strong>L_over_D</strong> (<em>float</em><em>, </em><em>optional</em>) – Geometry ratio L/D passed to compute_Fbar (default 1.0).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KXX, KXY, CXX, CXY</strong> – Arrays (or scalars) of the same broadcasted shape as the inputs:
+- K_xx: dynamic stiffness component (Fr averaged)
+- K_xy: dynamic coupling component (Ft averaged)
+- C_xx: dynamic damping component corresponding to K_xx
+- C_xy: dynamic damping coupling corresponding to K_xy</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bearing_calculations.solve_K_and_C_Friswell">
+<span class="sig-prename descclassname"><span class="pre">bearing_calculations.</span></span><span class="sig-name descname"><span class="pre">solve_K_and_C_Friswell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bearing_calculations.solve_K_and_C_Friswell" title="Link to this definition"></a></dt>
+<dd><p>Compute the 2x2 stiffness (K) and damping (C) matrices for a fluid bearing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> (<em>float</em>) – Shaft speed (rad/s).</p></li>
+<li><p><strong>f</strong> (<em>float</em>) – Static force / load (N).</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – Radial clearance (m).</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) – Eccentricity (dimensionless, 0 &lt; epsilon &lt;= 1).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>K</strong> (<em>numpy.ndarray, shape (2, 2)</em>) – Stiffness matrix (N/m), computed as (f / c) * A where A is dimensionless.</p></li>
+<li><p><strong>C</strong> (<em>numpy.ndarray, shape (2, 2)</em>) – Damping matrix (N·s/m), computed as (f / (c * omega)) * B where B is dimensionless.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bearing_calculations.solve_eccentricity">
+<span class="sig-prename descclassname"><span class="pre">bearing_calculations.</span></span><span class="sig-name descname"><span class="pre">solve_eccentricity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bearing_calculations.solve_eccentricity" title="Link to this definition"></a></dt>
+<dd><p>Solve for eccentricity (epsilon) using NewtonDescent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> (<em>float</em>) – Shaft diameter (m).</p></li>
+<li><p><strong>omega</strong> (<em>float</em>) – Shaft speed (rad/s).</p></li>
+<li><p><strong>eta</strong> (<em>float</em>) – Fluid viscosity (Pa·s).</p></li>
+<li><p><strong>L</strong> (<em>float</em>) – Bearing length (m).</p></li>
+<li><p><strong>f</strong> (<em>float</em>) – Static radial load (N).</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – Radial clearance (m).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Eccentricity (dimensionless, 0 &lt; epsilon &lt;= 1) if a valid solution is found;
+otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="PyFluidBearing: Open-Source Software for Fluid Bearing Calculations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Aleksanteri Hämäläinen, Oliver Häggman, Huy Nguyen, Elmo Laine.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
