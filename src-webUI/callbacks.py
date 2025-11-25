@@ -3,22 +3,29 @@ Calculator callback functions for web UI.
 Handles data conversion and computation logic.
 """
 
+import base64
+import os
+import sys
+from io import StringIO
+from pathlib import Path
+
+import matplotlib
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import sys
+
+matplotlib.use("Agg")  # Non-interactive backend
+import matplotlib.pyplot as plt
 
 # Add parent directory to path to import from src
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from src.bearing_calculations import (
     solve_eccentricity,
-    solve_K_and_C_Friswell,
     solve_K_and_C_AlBender,
+    solve_K_and_C_Friswell,
 )
-from src.pressure_distribution import pressure_distribution
 from src.compressible_flow import compressible_flow
-from plotting import create_albender_plot, create_multiple_lambda_plot
+from src.pressure_distribution import pressure_distribution
 
 
 def calculate_friswell_K_and_C(data):
@@ -316,14 +323,6 @@ def calculate_pressure_distribution(data):
     dict
         Result containing image path and statistics
     """
-    import os
-    import base64
-    from io import BytesIO
-    from src.pressure_distribution import pressure_distribution
-    import matplotlib
-
-    matplotlib.use("Agg")  # Non-interactive backend
-    import matplotlib.pyplot as plt
 
     # Extract parameters
     mu = data.get("mu", 0.04)
@@ -342,9 +341,6 @@ def calculate_pressure_distribution(data):
     output_path = os.path.join(temp_dir, "pressure_plot.png")
 
     # Capture stdout to get statistics
-    import sys
-    from io import StringIO
-
     old_stdout = sys.stdout
     sys.stdout = StringIO()
 
@@ -361,6 +357,7 @@ def calculate_pressure_distribution(data):
             hT=hT,
             plot_title=True,
             out_figure=output_path,
+            savefig=True,
         )
 
         # Get the captured output
@@ -419,13 +416,6 @@ def calculate_compressible_flow(data):
     dict
         Result containing base64 encoded plot image and statistics
     """
-    import os
-    import base64
-    import matplotlib
-
-    matplotlib.use("Agg")  # Non-interactive backend
-    import matplotlib.pyplot as plt
-
     # Extract parameters
     mu = data.get("mu", 0.001)
     omega = data.get("omega", 157.08)
@@ -449,9 +439,6 @@ def calculate_compressible_flow(data):
     output_path = os.path.join(temp_dir, "compressible_flow_plot.png")
 
     # Capture stdout to get statistics
-    import sys
-    from io import StringIO
-
     old_stdout = sys.stdout
     sys.stdout = StringIO()
 
@@ -474,6 +461,7 @@ def calculate_compressible_flow(data):
             relax=relax,
             plot_title=True,
             out_figure=output_path,
+            savefig=True,
         )
 
         # Get the captured output
